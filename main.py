@@ -151,7 +151,11 @@ if len(args.file) == 1:
             x = sp.check_output(command_line.split())
             out_mtx[i][j] = float(x.decode("utf-8").strip().split('\n')[-1])
             print(f"{populus1:s}-{populus2:s} {out_mtx[i][j]}")
-    out_mtx += out_mtx.T
+    if stats_name == 'psi':
+        # skew-symmetric matrix for Psi (as psi_{a, b} = psi_{b, a})
+        out_mtx += -out_mtx.T
+    else:
+        out_mtx += out_mtx.T
 else:
     # Create an output matrix for the given statistics.
     out_mtx = np.zeros((len(populus_list), len(populus_list2)))
