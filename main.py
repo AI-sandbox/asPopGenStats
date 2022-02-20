@@ -142,7 +142,7 @@ if len(args.file) == 1:
     # population list.
     for i in trange(len(populus_list)):
         populus1 = populus_list[i]
-        for j in trange(i + 1, len(populus_list)):
+        for j in range(i + 1, len(populus_list)):
             populus2 = populus_list[j]
             command_line = rscript_input(populus1, populus2, stats_name, args.blocksize,
                                          data_dir, save_file_path, output_file_name,
@@ -150,7 +150,7 @@ if len(args.file) == 1:
                                          downsample_size=args.downsample_size)
             x = sp.check_output(command_line.split())
             out_mtx[i][j] = float(x.decode("utf-8").strip().split('\n')[-1])
-            os.system(f"echo {populus1:s}-{populus2:s} {out_mtx[i][j]}")
+            print(f"{populus1:s}-{populus2:s} {out_mtx[i][j]}")
     out_mtx += out_mtx.T
 else:
     # Create an output matrix for the given statistics.
@@ -168,7 +168,7 @@ else:
                                          downsample_size=args.downsample_size)
             x = sp.check_output(command_line.split())
             out_mtx[i][j] = float(x.decode("utf-8").strip().split('\n')[-1])
-            os.system(f"echo {populus1:s}-{populus2:s} {out_mtx[i][j]}")
+            print(f"{populus1:s}-{populus2:s} {out_mtx[i][j]}")
 
 # Save the output statistic matrix into the given "save_file_path".
 np.savetxt(f"{save_file_path:s}/{stats_name:s}_mtx.txt",
