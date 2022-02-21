@@ -145,6 +145,7 @@ psi <- function(frq_series, downsample = 2) {
    return( sum(resampled.mat * psi.mat) / sum(resampled.mat * poly.mat) )
 }
 
+
 # Start block bootstrap.
 num_replicates = 50
 

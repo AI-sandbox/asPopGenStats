@@ -10,6 +10,7 @@ import os
 import sys
 import errno
 import numpy as np
+import pandas as pd
 import subprocess as sp
 import argparse
 from tqdm.auto import trange
@@ -44,7 +45,7 @@ except OSError as e:
     if e.errno != errno.EEXIST:
         raise
 # TODO: Define file directory for data. (We will change this when adding npz2freq.py)
-data_dir = "data/cluster2"
+data_dir = "data_migrate"
 
 # Read a list of population names.
 def read_population_name(populus_file_):
@@ -58,8 +59,8 @@ def read_population_name(populus_file_):
                 populus_list_.append(populus.strip())
     return populus_list_
 
-populus_file = args.file[0]
-populus_list = read_population_name(populus_file)
+populus_file1 = args.file[0]
+populus_list1 = read_population_name(populus_file1)
 if len(args.file) > 1:
     # Take the second population name list.
     populus_file2 = args.file[1]
@@ -84,7 +85,8 @@ if stats_name in ['f3', 'psi']:
             outgroup_name = input().strip().split()
             if len(outgroup_name) == 0:
                 raise("Invalid input for outgroup populations.")
-        outgroup_name = [pop.lower().capitalize() for pop in outgroup_name]
+        outgroup_name = ["_".join([part.lower().capitalize() for part in pop.split('_')])
+                         for pop in outgroup_name]
 
         thres = args.DAF
         if stats_name == 'psi' and thres == -1.0:
@@ -136,14 +138,14 @@ def rscript_input(pop1, pop2, stats_name, block_size,
 os.system(f"touch {os.path.join(save_file_path, output_file_name):s}")
 if len(args.file) == 1:
     # Create an output matrix for the given statistics.
-    out_mtx = np.zeros((len(populus_list), len(populus_list)))
+    out_mtx = np.zeros((len(populus_list1), len(populus_list1)))
 
     # Compute the given statistics for (n choose 2) pairs (x_i, x_j) in one
     # population list.
-    for i in trange(len(populus_list)):
-        populus1 = populus_list[i]
-        for j in range(i + 1, len(populus_list)):
-            populus2 = populus_list[j]
+    for i in trange(len(populus_list1)):
+        populus1 = populus_list1[i]
+        for j in range(i + 1, len(populus_list1)):
+            populus2 = populus_list1[j]
             command_line = rscript_input(populus1, populus2, stats_name, args.blocksize,
                                          data_dir, save_file_path, output_file_name,
                                          outgroup_filename=aggr_filename, DA_filename=DA_filename,
@@ -152,18 +154,18 @@ if len(args.file) == 1:
             out_mtx[i][j] = float(x.decode("utf-8").strip().split('\n')[-1])
             print(f"{populus1:s}-{populus2:s} {out_mtx[i][j]}")
     if stats_name == 'psi':
-        # skew-symmetric matrix for Psi (as psi_{a, b} = psi_{b, a})
+        # skew-symmetric matrix for Psi (as psi_{a, b} = -psi_{b, a})
         out_mtx += -out_mtx.T
     else:
         out_mtx += out_mtx.T
 else:
     # Create an output matrix for the given statistics.
-    out_mtx = np.zeros((len(populus_list), len(populus_list2)))
+    out_mtx = np.zeros((len(populus_list1), len(populus_list2)))
 
     # Compute the given statistics for all pairs (x_i, y_j) in two
     # population lists.
-    for i in trange(len(populus_list)):
-        populus1 = populus_list[i]
+    for i in trange(len(populus_list1)):
+        populus1 = populus_list1[i]
         for j in range(len(populus_list2)):
             populus2 = populus_list2[j]
             command_line = rscript_input(populus1, populus2, stats_name, args.blocksize,
@@ -175,5 +177,8 @@ else:
             print(f"{populus1:s}-{populus2:s} {out_mtx[i][j]}")
 
 # Save the output statistic matrix into the given "save_file_path".
-np.savetxt(f"{save_file_path:s}/{stats_name:s}_mtx.txt",
-           out_mtx, fmt = "%f", delimiter = ",")
+if len(args.file) > 1:
+    df = pd.DataFrame(out_mtx, index = populus_list1, columns = populus_list2)
+else:
+    df = pd.DataFrame(out_mtx, index = populus_list1, columns = populus_list1)
+df.to_csv(f"{save_file_path:s}/{stats_name:s}_mtx.txt")

@@ -52,7 +52,7 @@ f3 <- function(frq_series) {
    biased_f3 <- sum( ((frq_series[, 3] - frq_series[, 2]) *
                       (frq_series[, 3] - frq_series[, 1])) )
    temp <- (frq_series[, 3] * (1 - frq_series[, 3])) /
-            ((frq_series[, 4] - 1))
+            (frq_series[, 4] - 1)
    heterozygosity <- 2 * sum(temp * frq_series[, 4]) 
    adjusted <- sum(temp)
    
