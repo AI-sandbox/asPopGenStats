@@ -45,7 +45,7 @@ except OSError as e:
     if e.errno != errno.EEXIST:
         raise
 # TODO: Define file directory for data. (We will change this when adding npz2freq.py)
-data_dir = "data_migrate"
+data_dir = "data_modify"
 
 # Read a list of population names.
 def read_population_name(populus_file_):
@@ -181,4 +181,4 @@ if len(args.file) > 1:
     df = pd.DataFrame(out_mtx, index = populus_list1, columns = populus_list2)
 else:
     df = pd.DataFrame(out_mtx, index = populus_list1, columns = populus_list1)
-df.to_csv(f"{save_file_path:s}/{stats_name:s}_mtx.txt")
+df.to_csv(f"{save_file_path:s}/{stats_name:s}_mtx.csv")

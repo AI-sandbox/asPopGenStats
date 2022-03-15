@@ -88,7 +88,7 @@ psi <- function(frq_series, downsample = 2) {
    to.exclude <- tbl$fi == 0 | tbl$fj == 0 |
     	           tbl$ni < n | tbl$nj < n
    tbl <- tbl[!to.exclude, ]
-   if (nrow(tbl) == 0) { return(NA) }
+   if (nrow(tbl) == 0) { return(NaN) }
 
    # poly.mat is the normalization constant for psi-stat.
    # (Do not consider the cases when
@@ -173,6 +173,7 @@ if (num_of_snp >= 1000) {
    std_error_psi = apply(booted_psi$t, 2, sd, na.rm = TRUE)
 }
 output_data <- paste0(str_replace(args[1], ".freq", ""), "-",
-                      str_replace(args[2], ".freq", ""), "\t", psi_stat, "\t",
+                      str_replace(args[2], ".freq", ""), "\t",
+                      ifelse(is.na(psi_stat), NA, psi_stat), "\t",
                       std_error_psi, "\t", num_of_snp)
 write(output_data, file = OUTPUT_FILE, append = TRUE)
