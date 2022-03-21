@@ -153,14 +153,18 @@ num_replicates = 50
 print(psi(freq_series, DOWNSAMPLE_SIZE))
 
 tic("psi")
-cl <- makeCluster(4)
-clusterExport(cl = cl, c('freq_series'))
-booted_psi = tsboot(freq_series, psi, R = num_replicates, l = BLOCK_SIZE,
-                    sim = "fixed", endcorr = TRUE, downsample = DOWNSAMPLE_SIZE,
-                    parallel = "snow", ncpus = min(c(detectCores(), 10 )),
-                    cl = cl )
+if nrow(freq_series) >= BLOCK_SIZE {
+   cl <- makeCluster(4)
+   clusterExport(cl = cl, c('freq_series'))
+   booted_psi = tsboot(freq_series, psi, R = num_replicates, l = BLOCK_SIZE,
+                     sim = "fixed", endcorr = TRUE, downsample = DOWNSAMPLE_SIZE,
+                     parallel = "snow", ncpus = min(c(detectCores(), 10 )),
+                     cl = cl )
+   psi_stat <- booted_psi$t0 # PSI matrix
+} else{
+   psi_stat <- NaN
+}
 toc()
-psi_stat <- booted_psi$t0 # PSI matrix
 cat(psi_stat)
 
 # Check the total number of SNPs used for psi statistics and block bootstrap.

@@ -53,13 +53,17 @@ Pi <- function(frq_series) {
 num_replicates = 100
 
 tic("pi")
-cl <- makeCluster(4)
-clusterExport(cl = cl, c('freq_series'))
-booted_pi = tsboot(freq_series, Pi, R = num_replicates, l = BLOCK_SIZE,
-                   sim = "fixed", endcorr = TRUE, parallel = "snow",
-                   ncpus = min(c(detectCores(), 10 )), cl = cl )
+if nrow(freq_series) >= BLOCK_SIZE {
+   cl <- makeCluster(4)
+   clusterExport(cl = cl, c('freq_series'))
+   booted_pi = tsboot(freq_series, Pi, R = num_replicates, l = BLOCK_SIZE,
+                     sim = "fixed", endcorr = TRUE, parallel = "snow",
+                     ncpus = min(c(detectCores(), 10 )), cl = cl )
+   pi_stat <- booted_pi$t0 # PI matrix
+} else {
+   pi_stat <- NaN
+}
 toc()
-pi_stat <- booted_pi$t0 # PI matrix
 cat(pi_stat)
 
 # Check the total number of valid (i.e., not-NA) SNPS used for pi statistics

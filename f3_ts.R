@@ -63,14 +63,17 @@ f3 <- function(frq_series) {
 num_replicates = 100
 
 tic("F3")
-cl <- makeCluster(4)
-clusterExport(cl = cl, c('freq_series'))
-booted_f3 = tsboot(freq_series, f3, R = num_replicates, l = BLOCK_SIZE,
-                   sim = "fixed", endcorr = TRUE, parallel = "snow",
-		             ncpus = min(c(detectCores(), 10 )), cl = cl )
-
+if nrow(freq_series) >= BLOCK_SIZE {
+   cl <- makeCluster(4)
+   clusterExport(cl = cl, c('freq_series'))
+   booted_f3 = tsboot(freq_series, f3, R = num_replicates, l = BLOCK_SIZE,
+                     sim = "fixed", endcorr = TRUE, parallel = "snow",
+                     ncpus = min(c(detectCores(), 10 )), cl = cl )
+   f3_stat <- booted_f3$t0 # F3 matrix
+} else {
+   f3_stat <- NaN
+}
 toc()
-f3_stat <- booted_f3$t0 # F3 matrix
 cat(f3_stat)
 
 # Check the total number of valid (i.e., not-NA) SNPS used for F3 statistics and

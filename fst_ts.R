@@ -64,14 +64,17 @@ fst <- function(frq_series) {
 num_replicates = 100
 
 tic("F_ST")
-cl <- makeCluster(4)
-clusterExport(cl = cl, c('freq_series'))
-booted_fst = tsboot(freq_series, fst, R = num_replicates, l = BLOCK_SIZE,
+if (nrow(freq_series) >= BLOCK_SIZE) {
+   cl <- makeCluster(4)
+   clusterExport(cl = cl, c('freq_series'))
+   booted_fst = tsboot(freq_series, fst, R = num_replicates, l = BLOCK_SIZE,
                     sim = "fixed", endcorr = TRUE, parallel = "snow",
 		              ncpus = min(c(detectCores(), 10 )), cl = cl )
-
+   fst_stat <- booted_fst$t0 # F_ST matrix
+} else {
+   fst_stat <- NaN
+}
 toc()
-fst_stat <- booted_fst$t0 # F_ST matrix
 cat(fst_stat)
 
 # Check the total number of valid (i.e., not-NA) SNPS used for F_ST statistics and
