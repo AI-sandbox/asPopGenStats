@@ -153,7 +153,7 @@ num_replicates = 50
 print(psi(freq_series, DOWNSAMPLE_SIZE))
 
 tic("psi")
-if nrow(freq_series) >= BLOCK_SIZE {
+if (nrow(freq_series) >= BLOCK_SIZE) {
    cl <- makeCluster(4)
    clusterExport(cl = cl, c('freq_series'))
    booted_psi = tsboot(freq_series, psi, R = num_replicates, l = BLOCK_SIZE,

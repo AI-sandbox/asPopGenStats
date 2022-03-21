@@ -63,7 +63,7 @@ f3 <- function(frq_series) {
 num_replicates = 100
 
 tic("F3")
-if nrow(freq_series) >= BLOCK_SIZE {
+if (nrow(freq_series) >= BLOCK_SIZE) {
    cl <- makeCluster(4)
    clusterExport(cl = cl, c('freq_series'))
    booted_f3 = tsboot(freq_series, f3, R = num_replicates, l = BLOCK_SIZE,

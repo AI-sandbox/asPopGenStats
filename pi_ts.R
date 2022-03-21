@@ -53,7 +53,7 @@ Pi <- function(frq_series) {
 num_replicates = 100
 
 tic("pi")
-if nrow(freq_series) >= BLOCK_SIZE {
+if (nrow(freq_series) >= BLOCK_SIZE) {
    cl <- makeCluster(4)
    clusterExport(cl = cl, c('freq_series'))
    booted_pi = tsboot(freq_series, Pi, R = num_replicates, l = BLOCK_SIZE,
