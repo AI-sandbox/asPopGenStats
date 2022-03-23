@@ -1,4 +1,4 @@
-# Compute F3/pi/psi/F_ST statistics of any two populations from a given
+# Compute F3/pi/psi/F_ST/Heterozygosity statistics of any two populations from a given
 # population list file. The program accept three or four parameters, in which
 # the last two parameters indicate the target population list files.
 # 1. If we provide one population list file, the program will compute the given
@@ -16,13 +16,15 @@ import argparse
 from tqdm.auto import trange
 
 argp = argparse.ArgumentParser()
-argp.add_argument('stat', help="the statistics to compute",
-                  choices=["F3", "Pi", "Psi", "F_ST"])
+argp.add_argument('stat', help="the statistics to compute (H stands for heterozygosity)",
+                  choices=["F3", "Pi", "Psi", "F_ST", "H"])
 argp.add_argument('-f', '--file', nargs='+', required=True,
                   help="(REQUIRED) files containing a list of population names for computation, "\
                        "one file for self-match pairs, two files for cross-match pairs")
 argp.add_argument('-b', '--blocksize', type=int, default=500,
                   help="block size for block bootstrap")
+argp.add_argument('-n', '--num_replicates', type=int, default=100,
+                  help="the number of replicates for block bootstrap")
 argp.add_argument('-r', '--ref_group', nargs='+', metavar='GROUP',
                   help='(F3/Psi only) reference population group for F3/Psi statistics, '\
                        'if multiple population group names, create an aggregated population')
@@ -120,13 +122,13 @@ if stats_name in ['f3', 'psi']:
     except Exception as e:
         raise
 
-def rscript_input(pop1, pop2, stats_name, block_size,
+def rscript_input(pop1, pop2, stats_name, block_size, num_replicates,
                   data_dir, save_file_path, output_file_name,
                   outgroup_filename="", DA_filename="",
                   downsample_size=args.downsample_size):
     # Create a command line passed into R.
-    basic_format = f"Rscript {stats_name:s}_ts.R {pop1:s}.freq {pop2:s}.freq {block_size:d} "\
-                   f"{data_dir:s} {os.path.join(save_file_path, output_file_name):s} "
+    basic_format = f"Rscript {stats_name:s}.R {pop1:s}.freq {pop2:s}.freq {block_size:d} "\
+                   f"{num_replicates:d} {data_dir:s} {os.path.join(save_file_path, output_file_name):s} "
     if stats_name == 'f3':
         basic_format += f"{outgroup_filename:s}"
     if stats_name == 'psi':
@@ -147,7 +149,7 @@ if len(args.file) == 1:
         for j in range(i + 1, len(populus_list1)):
             populus2 = populus_list1[j]
             command_line = rscript_input(populus1, populus2, stats_name, args.blocksize,
-                                         data_dir, save_file_path, output_file_name,
+                                         args.num_replicates, data_dir, save_file_path, output_file_name,
                                          outgroup_filename=aggr_filename, DA_filename=DA_filename,
                                          downsample_size=args.downsample_size)
             x = sp.check_output(command_line.split())
@@ -169,7 +171,7 @@ else:
         for j in range(len(populus_list2)):
             populus2 = populus_list2[j]
             command_line = rscript_input(populus1, populus2, stats_name, args.blocksize,
-                                         data_dir, save_file_path, output_file_name,
+                                         args.num_replicates, data_dir, save_file_path, output_file_name,
                                          outgroup_filename=aggr_filename, DA_filename=DA_filename,
                                          downsample_size=args.downsample_size)
             x = sp.check_output(command_line.split())

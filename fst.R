@@ -13,15 +13,16 @@ suppressPackageStartupMessages({
 
 args = commandArgs(trailingOnly = TRUE)
 if (length(args) < 5) {
-   stop(paste("Usage: Rscript fst_ts.R <population1.freq> <population2.freq>",
-              "<block_size (int)> <data_directory> <output_file>"),
+   stop(paste("Usage: Rscript fst.R <population1.freq> <population2.freq>",
+              "<block_size (int)> <num_replicates (int)> <data_directory> <output_file>"),
         call. = FALSE)
 }
 POP1_FILE = args[1]
 POP2_FILE = args[2]
 BLOCK_SIZE = strtoi(args[3])
-DATA_DIR = args[4]
-OUTPUT_FILE = args[5]
+NUM_REPLICATES = strtoi(args[4])
+DATA_DIR = args[5]
+OUTPUT_FILE = args[6]
 
 
 # Set working directory.
@@ -47,6 +48,7 @@ freq_series <- freq_series[(freq_series[, 2] > 1) & (freq_series[, 4] > 1), ]
 
 # Create a function that computes F_ST statistics.
 fst <- function(frq_series) {
+   num_of_SNPs <- nrow(frq_series)
    
    biased_f2 <- ((frq_series[, 3] - frq_series[, 1]) ** 2) # array
    adjusted_a <- (frq_series[, 1] * (1 - frq_series[, 1])) /
@@ -55,13 +57,13 @@ fst <- function(frq_series) {
                  ((frq_series[, 4] - 1))
    Pi <- (frq_series[, 1] * (1 - frq_series[, 3])) +
          ((1 - frq_series[, 1]) * frq_series[, 3])
-   adjusted_f2 <- (biased_f2 - adjusted_a - adjusted_b)
+   fst <- sum((biased_f2 - adjusted_a - adjusted_b)/Pi)
    
-   return( mean(adjusted_f2/Pi) )
+   return( fst / num_of_SNPs )
 }
 
 # Start block bootstrap.
-num_replicates = 100
+num_replicates = NUM_REPLICATES
 
 tic("F_ST")
 if (nrow(freq_series) >= BLOCK_SIZE) {

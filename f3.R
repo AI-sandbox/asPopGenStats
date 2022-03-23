@@ -13,17 +13,18 @@ suppressPackageStartupMessages({
 
 args = commandArgs(trailingOnly = TRUE)
 if (length(args) < 6) {
-   stop(paste("Usage: Rscript f3_ts.R <population1.freq> <population2.freq>",
-              "<block_size (int)> <data_directory> <output_file>",
+   stop(paste("Usage: Rscript f3.R <population1.freq> <population2.freq>",
+              "<block_size (int)> <num_replicates (int)> <data_directory> <output_file>",
               "<outgroup.freq>"),
         call. = FALSE)
 }
 POP1_FILE = args[1]
 POP2_FILE = args[2]
 BLOCK_SIZE = strtoi(args[3])
-DATA_DIR = args[4]
-OUTPUT_FILE = args[5]
-OUTGROUP_FILE = args[6]
+NUM_REPLICATES = strtoi(args[4])
+DATA_DIR = args[5]
+OUTPUT_FILE = args[6]
+OUTGROUP_FILE = args[7]
 
 # Set working directory.
 setwd(paste0(getwd(), '/', DATA_DIR))
@@ -48,19 +49,20 @@ freq_series <- na.omit(freq_series)
 
 # Create a function that computes F3 statistics.
 f3 <- function(frq_series) {
+   num_of_SNPs <- nrow(frq_series)
    
    biased_f3 <- sum( ((frq_series[, 3] - frq_series[, 2]) *
                       (frq_series[, 3] - frq_series[, 1])) )
    temp <- (frq_series[, 3] * (1 - frq_series[, 3])) /
             (frq_series[, 4] - 1)
-   heterozygosity <- 2 * sum(temp * frq_series[, 4]) 
+   # heterozygosity <- 2 * sum(temp * frq_series[, 4]) 
    adjusted <- sum(temp)
    
-   return( (biased_f3 - adjusted) / nrow(frq_series) )
+   return( (biased_f3 - adjusted) / num_of_SNPs )
 }
 
 # Start block bootstrap.
-num_replicates = 100
+num_replicates = NUM_REPLICATES
 
 tic("F3")
 if (nrow(freq_series) >= BLOCK_SIZE) {

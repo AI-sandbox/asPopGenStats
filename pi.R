@@ -13,15 +13,16 @@ suppressPackageStartupMessages({
 
 args = commandArgs(trailingOnly = TRUE)
 if (length(args) < 5) {
-   stop(paste("Usage: Rscript pi_ts.R <population1.freq> <population2.freq>",
-              "<block_size (int)> <data_directory> <output_file>"),
+   stop(paste("Usage: Rscript pi.R <population1.freq> <population2.freq>",
+              "<block_size (int)> <num_replicates (int)> <data_directory> <output_file>"),
         call. = FALSE)
 }
 POP1_FILE = args[1]
 POP2_FILE = args[2]
 BLOCK_SIZE = strtoi(args[3])
-DATA_DIR = args[4]
-OUTPUT_FILE = args[5]
+NUM_REPLICATES = strtoi(args[4])
+DATA_DIR = args[5]
+OUTPUT_FILE = args[6]
 
 # Set working directory.
 setwd(paste0(getwd(), '/', DATA_DIR))
@@ -50,7 +51,7 @@ Pi <- function(frq_series) {
 }
 
 # Start block bootstrap.
-num_replicates = 100
+num_replicates = NUM_REPLICATES
 
 tic("pi")
 if (nrow(freq_series) >= BLOCK_SIZE) {
@@ -70,7 +71,7 @@ cat(pi_stat)
 # and block bootstrap.
 std_error_pi = 0
 # If the number of valid SNPs is less than 1000, we will not calculate the
-# standard deviation of f3 statistics from block bootstrap.
+# standard deviation of pi statistics from block bootstrap.
 if (nrow(freq_series) >= 1000) {
    std_error_pi = apply(booted_pi$t, 2, sd, na.rm = TRUE)
 }

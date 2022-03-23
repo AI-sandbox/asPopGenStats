@@ -21,18 +21,19 @@ suppressPackageStartupMessages({
 
 args = commandArgs(trailingOnly = TRUE)
 if (length(args) < 7) {
-   stop(paste("Usage: Rscript psi_ts.R <population1.freq> <population2.freq>",
-              "<block_size (int)> <data_directory> <output_file>",
+   stop(paste("Usage: Rscript psi.R <population1.freq> <population2.freq>",
+              "<block_size (int)> <num_replicates (int)> <data_directory> <output_file>",
               "<derived_allele_SNP_position_file> <downsampling_size (int)>"),
         call. = FALSE)
 }
 POP1_FILE = args[1]
 POP2_FILE = args[2]
 BLOCK_SIZE = strtoi(args[3])
-DATA_DIR = args[4]
-OUTPUT_FILE = args[5]
-DA_FILE = args[6]
-DOWNSAMPLE_SIZE = strtoi(args[7])
+NUM_REPLICATES = strtoi(args[4])
+DATA_DIR = args[5]
+OUTPUT_FILE = args[6]
+DA_FILE = args[7]
+DOWNSAMPLE_SIZE = strtoi(args[8])
 
 # Set working directory.
 setwd(paste0(getwd(), '/', DATA_DIR))
@@ -147,7 +148,7 @@ psi <- function(frq_series, downsample = 2) {
 
 
 # Start block bootstrap.
-num_replicates = 50
+num_replicates = NUM_REPLICATES
 
 # Get a sample output from psi function.
 print(psi(freq_series, DOWNSAMPLE_SIZE))
