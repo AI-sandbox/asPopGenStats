@@ -48,9 +48,7 @@ colnames(freq_series) <- c("populus1", "populus2", "outgroup", "outgroup_ct")
 freq_series <- na.omit(freq_series)
 
 # Create a function that computes F3 statistics.
-f3 <- function(frq_series) {
-   num_of_SNPs <- nrow(frq_series)
-   
+f3 <- function(frq_series) {   
    biased_f3 <- sum( ((frq_series[, 3] - frq_series[, 2]) *
                       (frq_series[, 3] - frq_series[, 1])) )
    temp <- (frq_series[, 3] * (1 - frq_series[, 3])) /
@@ -58,7 +56,7 @@ f3 <- function(frq_series) {
    # heterozygosity <- 2 * sum(temp * frq_series[, 4]) 
    adjusted <- sum(temp)
    
-   return( (biased_f3 - adjusted) / num_of_SNPs )
+   return( (biased_f3 - adjusted) / nrow(frq_series) )
 }
 
 # Start block bootstrap.

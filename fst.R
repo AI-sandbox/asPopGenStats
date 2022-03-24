@@ -48,8 +48,6 @@ freq_series <- freq_series[(freq_series[, 2] > 1) & (freq_series[, 4] > 1), ]
 
 # Create a function that computes F_ST statistics.
 fst <- function(frq_series) {
-   num_of_SNPs <- nrow(frq_series)
-   
    biased_f2 <- ((frq_series[, 3] - frq_series[, 1]) ** 2) # array
    adjusted_a <- (frq_series[, 1] * (1 - frq_series[, 1])) /
                  ((frq_series[, 2] - 1))
@@ -59,7 +57,7 @@ fst <- function(frq_series) {
          ((1 - frq_series[, 1]) * frq_series[, 3])
    fst <- sum((biased_f2 - adjusted_a - adjusted_b)/Pi)
    
-   return( fst / num_of_SNPs )
+   return( fst / nrow(frq_series) )
 }
 
 # Start block bootstrap.

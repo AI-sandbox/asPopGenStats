@@ -23,8 +23,8 @@ argp.add_argument('-f', '--file', nargs='+', required=True,
                        "one file for self-match pairs, two files for cross-match pairs")
 argp.add_argument('-b', '--blocksize', type=int, default=500,
                   help="block size for block bootstrap")
-argp.add_argument('-n', '--num_replicates', type=int, default=100,
-                  help="the number of replicates for block bootstrap")
+argp.add_argument('-n', '--num_replicates', type=int, default=50,
+                  help="number of replicates for block bootstrap")
 argp.add_argument('-r', '--ref_group', nargs='+', metavar='GROUP',
                   help='(F3/Psi only) reference population group for F3/Psi statistics, '\
                        'if multiple population group names, create an aggregated population')
@@ -38,6 +38,13 @@ args = argp.parse_args()
 
 # Define a saving file path.
 stats_name = args.stat.lower().replace('_', '')
+if stats_name == 'h':
+    stats_name = 'heterozygosity'
+    pop_size = 1
+elif stats_name == 'f3':
+    pop_size = 3
+else:
+    pop_size = 2
 save_file_path = os.path.join(sys.path[0], f"{stats_name:s}_output")
 output_file_name = f"{stats_name:s}_stat.txt"
 # Create a directory (if not exist) for the output of the statistics.
@@ -122,13 +129,15 @@ if stats_name in ['f3', 'psi']:
     except Exception as e:
         raise
 
-def rscript_input(pop1, pop2, stats_name, block_size, num_replicates,
+def rscript_input(pops, stats_name, block_size, num_replicates,
                   data_dir, save_file_path, output_file_name,
                   outgroup_filename="", DA_filename="",
                   downsample_size=args.downsample_size):
     # Create a command line passed into R.
-    basic_format = f"Rscript {stats_name:s}.R {pop1:s}.freq {pop2:s}.freq {block_size:d} "\
-                   f"{num_replicates:d} {data_dir:s} {os.path.join(save_file_path, output_file_name):s} "
+    basic_format = f"Rscript {stats_name:s}.R " + \
+                   "".join([pop + '.freq ' for pop in pops]) + \
+                   f"{block_size:d} {num_replicates:d} {data_dir:s} "\
+                   f"{os.path.join(save_file_path, output_file_name):s} "
     if stats_name == 'f3':
         basic_format += f"{outgroup_filename:s}"
     if stats_name == 'psi':
@@ -138,49 +147,62 @@ def rscript_input(pop1, pop2, stats_name, block_size, num_replicates,
 
 # Compute the given statistics with all combinations of two population groups.
 os.system(f"touch {os.path.join(save_file_path, output_file_name):s}")
-if len(args.file) == 1:
-    # Create an output matrix for the given statistics.
-    out_mtx = np.zeros((len(populus_list1), len(populus_list1)))
-
-    # Compute the given statistics for (n choose 2) pairs (x_i, x_j) in one
-    # population list.
+if pop_size == 1:
+    assert len(args.file) == 1
+    # Compute the given statistics for (x_i) in one population list.
     for i in trange(len(populus_list1)):
         populus1 = populus_list1[i]
-        for j in range(i + 1, len(populus_list1)):
-            populus2 = populus_list1[j]
-            command_line = rscript_input(populus1, populus2, stats_name, args.blocksize,
-                                         args.num_replicates, data_dir, save_file_path, output_file_name,
-                                         outgroup_filename=aggr_filename, DA_filename=DA_filename,
-                                         downsample_size=args.downsample_size)
-            x = sp.check_output(command_line.split())
-            out_mtx[i][j] = float(x.decode("utf-8").strip().split('\n')[-1])
-            print(f"{populus1:s}-{populus2:s} {out_mtx[i][j]}")
-    if stats_name == 'psi':
-        # skew-symmetric matrix for Psi (as psi_{a, b} = -psi_{b, a})
-        out_mtx += -out_mtx.T
+        command_line = rscript_input([populus1], stats_name, args.blocksize,
+                                     args.num_replicates, data_dir, save_file_path, output_file_name,
+                                     outgroup_filename=aggr_filename, DA_filename=DA_filename,
+                                     downsample_size=args.downsample_size)
+        x = sp.check_output(command_line.split())
+        output = float(x.decode("utf-8").strip().split('\n')[-1])
+        print(f"{populus1:s} {output}")
+else:
+    if len(args.file) == 1:
+        # Create an output matrix for the given statistics.
+        out_mtx = np.zeros((len(populus_list1), len(populus_list1)))
+
+        # Compute the given statistics for (n choose 2) pairs (x_i, x_j) in one
+        # population list.
+        for i in trange(len(populus_list1)):
+            populus1 = populus_list1[i]
+            for j in range(i + 1, len(populus_list1)):
+                populus2 = populus_list1[j]
+                command_line = rscript_input([populus1, populus2], stats_name, args.blocksize,
+                                            args.num_replicates, data_dir, save_file_path, output_file_name,
+                                            outgroup_filename=aggr_filename, DA_filename=DA_filename,
+                                            downsample_size=args.downsample_size)
+                x = sp.check_output(command_line.split())
+                out_mtx[i][j] = float(x.decode("utf-8").strip().split('\n')[-1])
+                print(f"{populus1:s}-{populus2:s} {out_mtx[i][j]}")
+        if stats_name == 'psi':
+            # skew-symmetric matrix for Psi (as psi_{a, b} = -psi_{b, a})
+            out_mtx += -out_mtx.T
+        else:
+            out_mtx += out_mtx.T
     else:
-        out_mtx += out_mtx.T
-else:
-    # Create an output matrix for the given statistics.
-    out_mtx = np.zeros((len(populus_list1), len(populus_list2)))
+        # Create an output matrix for the given statistics.
+        out_mtx = np.zeros((len(populus_list1), len(populus_list2)))
 
-    # Compute the given statistics for all pairs (x_i, y_j) in two
-    # population lists.
-    for i in trange(len(populus_list1)):
-        populus1 = populus_list1[i]
-        for j in range(len(populus_list2)):
-            populus2 = populus_list2[j]
-            command_line = rscript_input(populus1, populus2, stats_name, args.blocksize,
-                                         args.num_replicates, data_dir, save_file_path, output_file_name,
-                                         outgroup_filename=aggr_filename, DA_filename=DA_filename,
-                                         downsample_size=args.downsample_size)
-            x = sp.check_output(command_line.split())
-            out_mtx[i][j] = float(x.decode("utf-8").strip().split('\n')[-1])
-            print(f"{populus1:s}-{populus2:s} {out_mtx[i][j]}")
+        # Compute the given statistics for all pairs (x_i, y_j) in two
+        # population lists.
+        for i in trange(len(populus_list1)):
+            populus1 = populus_list1[i]
+            for j in range(len(populus_list2)):
+                populus2 = populus_list2[j]
+                command_line = rscript_input([populus1, populus2], stats_name, args.blocksize,
+                                            args.num_replicates, data_dir, save_file_path, output_file_name,
+                                            outgroup_filename=aggr_filename, DA_filename=DA_filename,
+                                            downsample_size=args.downsample_size)
+                x = sp.check_output(command_line.split())
+                out_mtx[i][j] = float(x.decode("utf-8").strip().split('\n')[-1])
+                print(f"{populus1:s}-{populus2:s} {out_mtx[i][j]}")
 
-# Save the output statistic matrix into the given "save_file_path".
-if len(args.file) > 1:
-    df = pd.DataFrame(out_mtx, index = populus_list1, columns = populus_list2)
-else:
-    df = pd.DataFrame(out_mtx, index = populus_list1, columns = populus_list1)
-df.to_csv(f"{save_file_path:s}/{stats_name:s}_mtx.csv")
+    # Save the output statistic matrix into the given "save_file_path".
+    if len(args.file) > 1:
+        df = pd.DataFrame(out_mtx, index = populus_list1, columns = populus_list2)
+    else:
+        df = pd.DataFrame(out_mtx, index = populus_list1, columns = populus_list1)
+    df.to_csv(f"{save_file_path:s}/{stats_name:s}_mtx.csv")

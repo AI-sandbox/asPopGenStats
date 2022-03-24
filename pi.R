@@ -43,11 +43,9 @@ freq_series <- na.omit(freq_series)
 
 # Create a function that computes pi statistics.
 Pi <- function(frq_series) {
-   num_of_SNPs <- nrow(frq_series)
-
    PI <- sum( (frq_series[, 1] * (1 - frq_series[, 2])) +
               ((1 - frq_series[, 1]) * frq_series[, 2]) )
-   return(PI / num_of_SNPs)
+   return(PI / nrow(frq_series))
 }
 
 # Start block bootstrap.

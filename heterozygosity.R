@@ -39,11 +39,9 @@ freq_series <- freq_series[(freq_series[, 2] > 1), ]
 
 # Create a function that computes pi statistics.
 Heterozygosity <- function(frq_series) {
-   num_of_SNPs <- nrow(frq_series)
-
    temp <- 2 * (frq_series[, 1] * (1 - frq_series[, 1]))
    Heterozyg <- sum( temp * (frq_series[, 2] / (frq_series[, 2] - 1)) )
-   return(Heterozyg / num_of_SNPs)
+   return(Heterozyg / nrow(frq_series))
 }
 
 # Start block bootstrap.
