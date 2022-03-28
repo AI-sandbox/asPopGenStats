@@ -21,6 +21,8 @@ argp.add_argument('stat', help="the statistics to compute (H stands for heterozy
 argp.add_argument('-f', '--file', nargs='+', required=True,
                   help="(REQUIRED) files containing a list of population names for computation, "\
                        "one file for self-match pairs, two files for cross-match pairs")
+argp.add_argument('-t', '--data_dir', required=True,
+                  help="(REQUIRED) frequency data file directory")
 argp.add_argument('-b', '--blocksize', type=int, default=500,
                   help="block size for block bootstrap")
 argp.add_argument('-n', '--num_replicates', type=int, default=50,
@@ -54,7 +56,7 @@ except OSError as e:
     if e.errno != errno.EEXIST:
         raise
 # TODO: Define file directory for data. (We will change this when adding npz2freq.py)
-data_dir = "data_modify"
+data_dir = args.data_dir
 
 # Read a list of population names.
 def read_population_name(populus_file_):
@@ -94,8 +96,8 @@ if stats_name in ['f3', 'psi']:
             outgroup_name = input().strip().split()
             if len(outgroup_name) == 0:
                 raise("Invalid input for outgroup populations.")
-        outgroup_name = ["_".join([part.lower().capitalize() for part in pop.split('_')])
-                         for pop in outgroup_name]
+        # outgroup_name = ["_".join([part.lower().capitalize() for part in pop.split('_')])
+        #                  for pop in outgroup_name]
 
         thres = args.DAF
         if stats_name == 'psi' and thres == -1.0:
@@ -108,7 +110,7 @@ if stats_name in ['f3', 'psi']:
             aggr_filename = outgroup_name[0] + ".freq"
         else:
             aggr_filename = "".join([pop.strip().split(".")[0][:2].capitalize()
-                                 for pop in outgroup_name]) + ".freq"
+                                     for pop in outgroup_name]) + ".freq"
         
         # Create a name format of the derived allele SNP position file
         # (e.g., "psi_atbupa_frq_05.freq").

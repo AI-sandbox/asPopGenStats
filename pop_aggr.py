@@ -45,9 +45,14 @@ df_final.to_csv(f"{data_dir:s}/{aggr_filename:s}", index=False)
 if DAF != -1.0:
     drv_frq = 1 * (res[:, 0] <= DAF)
     drv_frq += 2 * (res[:, 0] >= (1-DAF))
-    print(f"Number of DAF {DAF} (TYPE 1): {np.sum(res[:, 0] <= DAF)}")
-    print(f"Number of DAF {1-DAF} (TYPE 2): {np.sum(res[:, 0] >= (1-DAF))}")
+    stream_output = []
+    stream_output.append(f"Number of SNPs: {res.shape[0]}")
+    stream_output.append(f"Number of DAF {DAF} (TYPE 1): {np.sum(res[:, 0] <= DAF)}")
+    stream_output.append(f"Number of DAF {1-DAF} (TYPE 2): {np.sum(res[:, 0] >= (1-DAF))}")
+    for i in range(3):
+        print(stream_output[i])
     DAF_str = str(DAF).split(".")[-1][:2] # 0.05 -> "05"
     DAF_str += "0" * (2 - len(DAF_str)) # 0.0 -> "00"
     np.savetxt(f"{data_dir:s}/{DA_filename:s}",
-               drv_frq, fmt = "%d", delimiter = "\n")
+               drv_frq, fmt = "%d", delimiter = "\n",
+               header = ". ".join(stream_output))

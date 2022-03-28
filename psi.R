@@ -46,7 +46,7 @@ setwd(paste0(getwd(), '/', DATA_DIR))
 # "1" indicates the alternative allele frequency is <= threshold and
 # "2" indicates the alternative allele frequency is >= 1 - threshold.
 #
-ref_thresh = read.table(DA_FILE, header = FALSE)
+ref_thresh = read.table(DA_FILE, header = FALSE, skip = 1)
 
 # Take "FREQ" and "CT" columns from the ".freq" files of two target populations.
 df_populus1 = read.table(POP1_FILE, header = TRUE, sep = ",",
