@@ -35,7 +35,15 @@ argp.add_argument('-D', '--DAF', type=float, default=-1.0,
                        '(a float number between [0.0, 0.5])')
 argp.add_argument('-d', '--downsample_size', type=int, default=2,
                   help='(Psi only) downsampling size for Psi statistics')
+argp.add_argument('--rm_DA_files', type=bool, default=False,
+                  help='whether we will remove existing files that indicates SNP '\
+                       'positions for derived alleles at the new run')
 args = argp.parse_args()
+
+# TODO: Define file directory for data. (We will change this when adding npz2freq.py)
+data_dir = args.data_dir
+if args.rm_DA_files:
+    os.system(f'rm {data_dir}/psi_*.txt')
 
 
 # Define a saving file path.
@@ -55,8 +63,7 @@ try:
 except OSError as e:
     if e.errno != errno.EEXIST:
         raise
-# TODO: Define file directory for data. (We will change this when adding npz2freq.py)
-data_dir = args.data_dir
+
 
 # Read a list of population names.
 def read_population_name(populus_file_):
