@@ -143,7 +143,7 @@ psi <- function(frq_series, downsample = 2) {
    # n    |p_n0  p_n1  ...   p_nn
    resampled.mat <- matrix(rowSums(apply(tbl, 1, f.contribution, b = n)),
                            nrow = n+1)
-   return( sum(resampled.mat * psi.mat) / sum(resampled.mat * poly.mat) )
+   return( sum(resampled.mat * psi.mat) / sum(resampled.mat * poly.mat) / n )
 }
 
 

@@ -40,10 +40,10 @@ freq_series = ts(cbind(df_populus1, df_populus2))
 colnames(freq_series) <- c("populus1", "populus1_ct", "populus2", "populus2_ct")
 # Exclude all NaN value SNPs.
 freq_series <- na.omit(freq_series)
-# Exclude all SNPs that has p_A = p_B = 0 or p_A = p_B = 1 (i.e., pi_stat = 0)
+# # Exclude all SNPs that has p_A = p_B = 0 or p_A = p_B = 1 (i.e., pi_stat = 0)
+# freq_series <- freq_series[(freq_series[, 1] != 0) | (freq_series[, 3] != 0), ]
+# freq_series <- freq_series[(freq_series[, 1] != 1) | (freq_series[, 3] != 1), ]
 # Exclude all SNPs that has n_A, n_B <= 1 
-freq_series <- freq_series[(freq_series[, 1] != 0) | (freq_series[, 3] != 0), ]
-freq_series <- freq_series[(freq_series[, 1] != 1) | (freq_series[, 3] != 1), ]
 freq_series <- freq_series[(freq_series[, 2] > 1) & (freq_series[, 4] > 1), ]
 
 # Create a function that computes F_ST statistics.
@@ -53,11 +53,11 @@ fst <- function(frq_series) {
                  ((frq_series[, 2] - 1))
    adjusted_b <- (frq_series[, 3] * (1 - frq_series[, 3])) /
                  ((frq_series[, 4] - 1))
-   Pi <- (frq_series[, 1] * (1 - frq_series[, 3])) +
-         ((1 - frq_series[, 1]) * frq_series[, 3])
-   fst <- sum((biased_f2 - adjusted_a - adjusted_b)/Pi)
+   Pi <- sum((frq_series[, 1] * (1 - frq_series[, 3])) +
+             ((1 - frq_series[, 1]) * frq_series[, 3]))
+   f2 <- sum(biased_f2 - adjusted_a - adjusted_b)
    
-   return( fst / nrow(frq_series) )
+   return( f2 / Pi )
 }
 
 # Start block bootstrap.

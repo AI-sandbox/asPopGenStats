@@ -25,7 +25,7 @@ argp.add_argument('-t', '--data_dir', required=True,
                   help="(REQUIRED) frequency data file directory")
 argp.add_argument('-b', '--blocksize', type=int, default=500,
                   help="block size for block bootstrap")
-argp.add_argument('-n', '--num_replicates', type=int, default=50,
+argp.add_argument('-n', '--num_replicates', type=int, default=100,
                   help="number of replicates for block bootstrap")
 argp.add_argument('-r', '--ref_group', nargs='+', metavar='GROUP',
                   help='(F3/Psi only) reference population group for F3/Psi statistics, '\
