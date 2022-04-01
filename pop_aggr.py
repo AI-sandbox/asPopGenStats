@@ -35,7 +35,7 @@ for i in range(1, len(files)):
     curr_pop = pd.read_csv(os.path.join(data_dir, files[i]),
                            header=0)[colname].to_numpy()
     res += np.stack((curr_pop[:, 0] * curr_pop[:, 1], curr_pop[:, 1]), axis=-1)
-res[:, 0] = res[:, 0] / res[:, 1] # ['FREQ', 'CT']
+res[:, 0] = np.divide(res[:, 0], res[:, 1], out=np.zeros(res.shape[0]), where=(res[:, 1] != 0)) # ['FREQ', 'CT']
 
 df_final = pd.DataFrame(np.hstack((chrom_idx.reshape(res.shape[0], 1), res)),
                         columns = ["CHROM_IDX", "FREQ", "CT"])
@@ -43,13 +43,17 @@ df_final.to_csv(f"{data_dir:s}/{aggr_filename:s}", index=False)
 
 # Prepare a derived allele SNP position file.
 if DAF != -1.0:
-    drv_frq = 1 * (res[:, 0] <= DAF)
-    drv_frq += 2 * (res[:, 0] >= (1-DAF))
-    stream_output = []
-    stream_output.append(f"Number of SNPs: {res.shape[0]}")
-    stream_output.append(f"Number of DAF {DAF} (TYPE 1): {np.sum(res[:, 0] <= DAF)}")
-    stream_output.append(f"Number of DAF {1-DAF} (TYPE 2): {np.sum(res[:, 0] >= (1-DAF))}")
-    for i in range(3):
+    if abs(DAF - 0.5) <= 1e-5:
+        drv_frq = np.ones(res.shape[0])
+        stream_output = [f"No Polarization. Number of SNPs: {res.shape[0]}"]
+    else:
+        drv_frq = 1 * (res[:, 0] <= DAF)
+        drv_frq += 2 * (res[:, 0] >= (1-DAF))
+        stream_output = []
+        stream_output.append(f"Number of SNPs: {res.shape[0]}")
+        stream_output.append(f"Number of DAF {DAF} (TYPE 1): {np.sum(res[:, 0] <= DAF)}")
+        stream_output.append(f"Number of DAF {1-DAF} (TYPE 2): {np.sum(res[:, 0] >= (1-DAF))}")
+    for i in range(len(stream_output)):
         print(stream_output[i])
     DAF_str = str(DAF).split(".")[-1][:2] # 0.05 -> "05"
     DAF_str += "0" * (2 - len(DAF_str)) # 0.0 -> "00"
