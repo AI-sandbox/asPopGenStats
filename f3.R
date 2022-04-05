@@ -86,7 +86,7 @@ if (nrow(freq_series) >= 1000) {
 }
 
 # Output format
-#   PopulationA-PopulationB    F3_stat    F3_stat_std    num_of_valid_SNPs
+#   PopulationA-PopulationB    F3_stat    F3_stat_se    num_of_valid_SNPs
 output_data <- paste0(str_replace(args[1], ".freq", ""), "-",
                       str_replace(args[2], ".freq", ""), "\t", f3_stat, "\t",
                       std_error_f3, "\t", nrow(freq_series))

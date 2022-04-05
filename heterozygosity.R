@@ -71,7 +71,7 @@ if (nrow(freq_series) >= 1000) {
 }
 
 # Output format:
-#   PopulationA    heterozygosity    heterozygosity_stat_std    num_of_valid_SNPs
+#   PopulationA    heterozygosity    heterozygosity_stat_se    num_of_valid_SNPs
 output_data <- paste0(str_replace(args[1], ".freq", ""), "\t", heterozyg, "\t",
                       std_error_heterozyg, "\t", nrow(freq_series))
 write(output_data, file = OUTPUT_FILE, append = TRUE)

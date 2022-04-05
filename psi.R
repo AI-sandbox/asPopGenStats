@@ -177,6 +177,8 @@ num_of_snp <- sum(rowSums(is.nan(freq_series[, c(1, 3)])) == 0) # &
 if (num_of_snp >= 1000) {
    std_error_psi = apply(booted_psi$t, 2, sd, na.rm = TRUE)
 }
+# Output format
+#   PopulationA-PopulationB    Psi_stat    Psi_stat_se    num_of_valid_SNPs
 output_data <- paste0(str_replace(args[1], ".freq", ""), "-",
                       str_replace(args[2], ".freq", ""), "\t",
                       ifelse(is.na(psi_stat), NA, psi_stat), "\t",
