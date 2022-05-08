@@ -170,13 +170,14 @@ cat(psi_stat)
 
 # Check the total number of SNPs used for psi statistics and block bootstrap.
 std_error_psi = 0
-num_of_snp <- sum(rowSums(is.nan(freq_series[, c(1, 3)])) == 0) # &
-                  #  freq_series[, 1] >= 1 & freq_series[, 3] >= 1 &
-                  #  freq_series[, 2] < downsample_size &
-                  #  freq_series[, 4] < downsample_size)
-if (num_of_snp >= 1000) {
-   std_error_psi = apply(booted_psi$t, 2, sd, na.rm = TRUE)
-}
+num_of_snp <- sum(rowSums(is.nan(freq_series[, c(1, 3)])) == 0 &
+                  freq_series[, 1] >= 1 & freq_series[, 3] >= 1 &
+                  freq_series[, 2] >= DOWNSAMPLE_SIZE &
+                  freq_series[, 4] >= DOWNSAMPLE_SIZE)
+# if (num_of_snp >= 1000) {
+std_error_psi = apply(booted_psi$t, 2, sd, na.rm = TRUE)
+# }
+
 # Output format
 #   PopulationA-PopulationB    Psi_stat    Psi_stat_se    num_of_valid_SNPs
 output_data <- paste0(str_replace(args[1], ".freq", ""), "-",

@@ -31,15 +31,16 @@ curr_pop = pd.read_csv(os.path.join(data_dir, files[0]),
 chrom_idx = curr_pop[:, 0]
 res = np.stack((curr_pop[:, 1] * curr_pop[:, 2], curr_pop[:, 2]), axis=-1) # ['FREQ_CT', 'CT']
 
-for i in range(1, len(files)):
-    curr_pop = pd.read_csv(os.path.join(data_dir, files[i]),
-                           header=0)[colname].to_numpy()
-    res += np.stack((curr_pop[:, 0] * curr_pop[:, 1], curr_pop[:, 1]), axis=-1)
-res[:, 0] = np.divide(res[:, 0], res[:, 1], out=np.zeros(res.shape[0]), where=(res[:, 1] != 0)) # ['FREQ', 'CT']
+if len(files) > 1:
+    for i in range(1, len(files)):
+        curr_pop = pd.read_csv(os.path.join(data_dir, files[i]),
+                            header=0)[colname].to_numpy()
+        res += np.stack((curr_pop[:, 0] * curr_pop[:, 1], curr_pop[:, 1]), axis=-1)
+    res[:, 0] = np.divide(res[:, 0], res[:, 1], out=np.zeros(res.shape[0]), where=(res[:, 1] != 0)) # ['FREQ', 'CT']
 
-df_final = pd.DataFrame(np.hstack((chrom_idx.reshape(res.shape[0], 1), res)),
-                        columns = ["CHROM_IDX", "FREQ", "CT"])
-df_final.to_csv(f"{data_dir:s}/{aggr_filename:s}", index=False)
+    df_final = pd.DataFrame(np.hstack((chrom_idx.reshape(res.shape[0], 1), res)),
+                            columns = ["CHROM_IDX", "FREQ", "CT"])
+    df_final.to_csv(f"{data_dir:s}/{aggr_filename:s}", index=False)
 
 # Prepare a derived allele SNP position file.
 if DAF != -1.0:

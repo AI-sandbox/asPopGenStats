@@ -126,7 +126,7 @@ if stats_name in ['f3', 'psi']:
         pop_data_files = [pop + ".freq" for pop in outgroup_name]
         if (not os.path.exists(os.path.join(data_dir, aggr_filename))) or \
            (stats_name == 'psi' and not os.path.exists(os.path.join(data_dir, DA_filename))):
-            print("Multiple reference population groups detected without "
+            print("Reference population groups detected without "
                   "an aggregated population file or a DAF-SNP position file.")
             print("Creating aggregated population file...")
             os.system(f"python3 pop_aggr.py {data_dir:s} {' '.join(pop_data_files):s} {thres:f} "
