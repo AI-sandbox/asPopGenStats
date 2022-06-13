@@ -34,7 +34,7 @@ optional arguments:
                         for derived alleles at the end of each run, default=True  
 
 \* all pair example (complete graph): [A1, A2, A3] => A1A2, A1A3, A2A3, cross-match pair example (bipartite graph): [A1, A2], [B1, B2] => A1B1, A1B2, A2B1, A2B2  
-\*\* in the file directory, there should be frequency files from step 2 named as <pop>.freq, for example, “Samoa.freq”  
+\*\* in the file directory, there should be frequency files from step 2 named as \<pop>.freq, for example, “Samoa.freq”  
 \*\*\* when DAF=0.5, the Psi computation will have no polarization  
 † be aware that a valid downsampling size should be less than the minimum number of observations for the population groups passed into the statistics  
 
@@ -44,6 +44,6 @@ python3 main.py Psi -f pop_list.txt -t data_American -b 50 -n 200 -r Samoa Tonga
 (Psi only) The program will first generate an aggregated population file if there are multiple reference population groups and the file name will contain the first two letters of each reference group capitalized. So for the example above, you can find a file “SaTo.freq” in the frequency data file directory. Then it will generate a file specifying the derived allele positions, which is named in the following format: 
 psi_<aggr_name>\_frq\_\<DAF>.txt
 
-The outputs of the given statistics are in the directory: <stat>_output. The statistics matrix file, <stat>_mtx.csv, contains a matrix of the sample mean of the given statistics, where rows and columns represent “pop_list1.txt” and “pop_list2.txt”, respectively. The statistics output file, <stat>_stat.txt, contains a list of rows of outputs:
-        popA-popB        <stat>_mean        <stat>_SE        num_of_SNPs_used
-NOTE: “<stat>_mtx.csv” is overwritten at each run, while “<stat>_stat.txt” uses appending format for each run.
+The outputs of the given statistics are in the directory: \<stat>\_output. The statistics matrix file, \<stat>\_mtx.csv, contains a matrix of the sample mean of the given statistics, where rows and columns represent “pop_list1.txt” and “pop_list2.txt”, respectively. The statistics output file,\<stat>\_stat.txt, contains a list of rows of outputs:
+        popA-popB        \<stat>\_mean        \<stat>\_SE        num_of_SNPs_used
+NOTE: “<stat>_mtx.csv” is overwritten at each run, while “\<stat>_stat.txt” uses appending format for each run.
