@@ -34,8 +34,11 @@ optional arguments:
                         for derived alleles at the end of each run, default=True
 
 \* all pair example (complete graph): [A1, A2, A3] => A1A2, A1A3, A2A3, cross-match pair example (bipartite graph): [A1, A2], [B1, B2] => A1B1, A1B2, A2B1, A2B2
+
 \*\* in the file directory, there should be frequency files from step 2 named as <pop>.freq, for example, “Samoa.freq”
+
 \*\*\* when DAF=0.5, the Psi computation will have no polarization
+
 † be aware that a valid downsampling size should be less than the minimum number of observations for the population groups passed into the statistics
 
 An example of the execution code:
