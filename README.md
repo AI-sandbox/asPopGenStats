@@ -13,8 +13,8 @@ optional arguments:
   -h, --help            show this help message and exit  
   -f FILE [FILE ...], --file FILE [FILE ...]  
                         (REQUIRED) files containing a list of population names for computation,  
-                        each file has one column of names, only one file is needed for statistics that are computed  
-                        on all pairs of populations (complete graph), two files are needed for statistics that  
+                        each file has one column of names, only one file is needed for statistics that are computed  
+                        on all pairs of populations (complete graph), two files are needed for statistics that  
                         are computed between only particular pairs of populations (bipartite graph)*  
   -t DATA_DIR, --data_dir DATA_DIR  
                         (REQUIRED) directory containing the snp frequency file**  
@@ -23,10 +23,10 @@ optional arguments:
   -n NUM_REPLICATES, --num_replicates NUM_REPLICATES  
                         number of replicates for block bootstrap, default=100  
   -r GROUP [GROUP ...], --ref_group GROUP [GROUP ...]  
-                        (F3/Psi only) reference population group for F3/Psi statistics, if  
-                        multiple population group names, create a single aggregated reference out of them  
+                        (F3/Psi only) reference population group for F3/Psi statistics, if  
+                        multiple population group names, create a single aggregated reference out of them  
   -D DAF, --DAF DAF     (Psi only) derived allele frequency threshold, (a float number between  
-                        [0.0, 0.5])*** , default=-1.0 (i.e. indicates non-Psi stats are being computed)  
+                        [0.0, 0.5])*** , default=-1.0 (i.e. indicates non-Psi stats are being computed)  
   -d DOWNSAMPLE_SIZE, --downsample_size DOWNSAMPLE_SIZE  
                         (Psi only) downsampling size for computing Psi statistics †, default=2  
   --rm_DA_files RM_DA_FILES  
