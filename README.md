@@ -33,11 +33,12 @@ optional arguments:
                         (Boolean) whether to will remove the intermediary files that indicate SNP positions  
                         for derived alleles at the end of each run, default=True  
 
-\* all pair example (complete graph): [A1, A2, A3] => A1A2, A1A3, A2A3, cross-match pair example (bipartite graph): [A1, A2], [B1, B2] => A1B1, A1B2, A2B1, A2B2  
+\* all pair example (complete graph): [A1, A2, A3] => A1A2, A1A3, A2A3, cross-match pair example (bipartite graph): [A1, A2], [B1, B2] => A1B1, A1B2, A2B1, A2B2
+
 \*\* in the file directory, there should be frequency files named as \<pop>.freq, for example, “Samoa.freq”, which has the first line denoting the column names of the csv data file (comma-separated format) -- CHROM_IDX, FREQ, CT -- where “CHROM_IDX” is the label for the column containing chromosome number, “FREQ” is the label for the column containing the alternative allele frequency, and “CT” is the label for the column containing the total number of observations for that SNP across all samples in the population (accounting for samples that are missing or masked at that position).
   
 \*\*\* when DAF=0.5, the Psi computation will have no polarization  
-† be aware that a valid downsampling size should be less than the minimum number of observations for the population groups passed into the statistics  
+† be aware that a valid downsampling size should be less than the minimum number of observations for the population groups passed into the statistics
 
 An example of the execution code:
 python3 main.py Psi -f pop_list.txt -t data_American -b 50 -n 200 -r Samoa Tonga -D 0.05 -d 2 --rm_DA_files True
