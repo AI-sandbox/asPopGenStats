@@ -47,6 +47,8 @@ python3 main.py Psi -f pop_list.txt -t data_American -b 50 -n 200 -r Samoa Tonga
 (Psi only) The program will first generate an aggregated population file if there are multiple reference population groups and the file name will contain the first two letters of each reference group capitalized. So for the example above, you can find a file “SaTo.freq” in the frequency data file directory. Then it will generate a file specifying the derived allele positions, which is named in the following format: 
 psi_<aggr_name>\_frq\_\<DAF>.txt
 
-The outputs of the given statistics are in the directory: \<stat>\_output. The statistics matrix file, \<stat>\_mtx.csv, contains a matrix of the sample mean of the given statistics, where rows and columns represent “pop_list1.txt” and “pop_list2.txt”, respectively. The statistics output file,\<stat>\_stat.txt, contains a list of rows of outputs:
+The outputs of the given statistics are in the directory: \<stat>\_output. The statistics matrix file, \<stat>\_mtx.csv, contains a matrix of the sample mean of the given statistics, where rows and columns represent “pop_list1.txt” and “pop_list2.txt”, respectively. The statistics output file,\<stat>\_stat.txt, contains a list of rows of outputs:  
         popA-popB        \<stat>\_mean        \<stat>\_SE        num_of_SNPs_used  
 NOTE: “\<stat>\_mtx.csv” is overwritten at each run, while “\<stat>\_stat.txt” uses appending format for each run.
+
+Cite: Ioannidis, A. G., Blanco-Portillo, J., Sandoval, K., Hagelberg, E., Barberena-Jonas, C., Hill, A. V., ... & Moreno-Estrada, A. (2021). Paths and timings of the peopling of Polynesia inferred from genomic networks. Nature, 597(7877), 522-526.
