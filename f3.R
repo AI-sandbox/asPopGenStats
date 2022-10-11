@@ -46,6 +46,7 @@ freq_series = ts(cbind(df_populus1, df_populus2, df_outgroup))
 colnames(freq_series) <- c("populus1", "populus2", "outgroup", "outgroup_ct")
 # Exclude all NaN value SNPs.
 freq_series <- na.omit(freq_series)
+freq_series <- freq_series[(freq_series[, 4] > 1), ]
 
 # Create a function that computes F3 statistics.
 f3 <- function(frq_series) {   
