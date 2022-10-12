@@ -31,18 +31,28 @@ curr_pop = pd.read_csv(os.path.join(data_dir, files[0]),
 chrom_idx = curr_pop[:, 0]
 res = np.stack((curr_pop[:, 1] * curr_pop[:, 2], curr_pop[:, 2]), axis=-1) # ['FREQ_CT', 'CT']
 
+# (F3/Psi) Aggregate the reference populations to a new population and save to a
+# new frequency file.
 if len(files) > 1:
     for i in range(1, len(files)):
         curr_pop = pd.read_csv(os.path.join(data_dir, files[i]),
                             header=0)[colname].to_numpy()
         res += np.stack((curr_pop[:, 0] * curr_pop[:, 1], curr_pop[:, 1]), axis=-1)
-    res[:, 0] = np.divide(res[:, 0], res[:, 1], out=np.zeros(res.shape[0]), where=(res[:, 1] != 0)) # ['FREQ', 'CT']
+    res[:, 0] = np.divide(res[:, 0], res[:, 1], out=np.zeros(res.shape[0]),
+                          where=(res[:, 1] != 0)) # ['FREQ', 'CT']
 
     df_final = pd.DataFrame(np.hstack((chrom_idx.reshape(res.shape[0], 1), res)),
                             columns = ["CHROM_IDX", "FREQ", "CT"])
     df_final.to_csv(f"{data_dir:s}/{aggr_filename:s}", index=False)
 
-# Prepare a derived allele SNP position file.
+# (Psi) Prepare a derived allele SNP position file based on the aggregated population.
+# This file marks the derivied allele SNP loci using integers (0, 1, 2) in
+# the following format:
+#   |__________|____________________________|___________|
+#   0         DAF                         1-DAF         1
+#    --- 1 ---   ----------- 0 ------------  ---- 2 ----
+# where DAF represents the derived allele frequency threshold [0.0 - 0.5] for
+# the reference aggregated population.
 if DAF != -1.0:
     if abs(DAF - 0.5) <= 1e-5:
         drv_frq = np.ones(res.shape[0])
@@ -58,6 +68,5 @@ if DAF != -1.0:
         print(stream_output[i])
     DAF_str = str(DAF).split(".")[-1][:2] # 0.05 -> "05"
     DAF_str += "0" * (2 - len(DAF_str)) # 0.0 -> "00"
-    np.savetxt(f"{data_dir:s}/{DA_filename:s}",
-               drv_frq, fmt = "%d", delimiter = "\n",
-               header = ". ".join(stream_output))
+    np.savetxt(f"{data_dir:s}/{DA_filename:s}", drv_frq, fmt='%d',
+               delimiter='\n', header=". ".join(stream_output))
