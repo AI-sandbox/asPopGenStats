@@ -44,7 +44,7 @@ optional arguments:
 An example of the execution code:
 python3 main.py Psi -f pop_list.txt -t data_American -b 50 -n 200 -r Samoa Tonga -D 0.05 -d 2 --rm_DA_files True
 
-(Psi only) The program will first generate an aggregated population file if there are multiple reference population groups and the file name will contain the first two letters of each reference group capitalized. So for the example above, you can find a file “SaTo.freq” in the frequency data file directory. Then it will generate a file specifying the derived allele positions, which is named in the following format: 
+(Psi only) The program will first generate an aggregated population file if there are multiple reference population groups and the file name will contain the first two letters of each reference group capitalized. So for the example above, you can find a file “SamTon.freq” in the frequency data file directory. Then it will generate a file specifying the derived allele positions, which is named in the following format: 
 psi_<aggr_name>\_frq\_\<DAF>.txt
 
 The outputs of the given statistics are in the directory: \<stat>\_output. The statistics matrix file, \<stat>\_mtx.csv, contains a matrix of the sample mean of the given statistics, where rows and columns represent “pop_list1.txt” and “pop_list2.txt”, respectively. The statistics output file, \<stat>\_stat.txt, contains a list of rows of outputs:  
