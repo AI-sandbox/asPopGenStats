@@ -40,7 +40,7 @@ argp.add_argument('-r', '--ref_group', nargs='+', metavar='GROUP',
                        'if multiple population group names, create an aggregated population')
 argp.add_argument('-D', '--DAF', type=float, default=-1.0,
                   help='(Psi only) derived allele frequency threshold, '\
-                       '(a float number between [0.0, 0.5])')
+                       '(a float number between [0.0, 0.5], 0.5 represents no polarization)')
 argp.add_argument('-d', '--downsample_size', type=int, default=2,
                   help='(Psi only) downsampling size for Psi statistics')
 argp.add_argument('--rm_DA_files', type=bool, default=False,

@@ -259,7 +259,7 @@ class GeneticStatistics(ABC):
         self.block_size = int(config.block_size)
         self.num_replicates = int(config.num_replicates)
         self.output_file = self.absolute_path(config.output_file)
-        self.num_SNPs_thres = 1000
+        self.num_SNPs_thres = self.block_size * 5
         self.mean, self.std_error = 0.0, 0.0
 
     def absolute_path(self, f):
@@ -319,9 +319,7 @@ class GeneticStatistics(ABC):
                         count) table
         '''
         nrow = df.shape[0]
-        self.no_compute, self.no_compute_se = False, False 
-        if self.block_size > nrow:
-            self.no_compute = True
+        self.no_compute_se = False 
         if nrow < self.num_SNPs_thres:
             self.no_compute_se = True
     
@@ -361,19 +359,15 @@ class Heterozygosity(GeneticStatistics):
 
     def compute_statistics(self, df):
         super().compute_statistics(df)
-        if self.no_compute:
-            return np.nan, np.nan
+        if self.no_compute_se:
+            return heterozygosity(df), np.nan
         else:
             remote_elements = [compute_statistics_helper.remote(df, self.block_size,
                                                                 'heterozygosity')
                                 for _ in range(self.num_replicates)]
             sample_statistics = ray.get(remote_elements)
             sample_statistics = np.concatenate(sample_statistics, axis=None)
-
-            if self.no_compute_se:
-                return heterozygosity(df), np.nan
-            else:
-                return heterozygosity(df), np.std(sample_statistics, ddof=1)
+            return heterozygosity(df), np.std(sample_statistics, ddof=1)
 
     def write_output(self, pop1, nrow):
         output = f"{pop1:s}\t{self.mean:.8f}\t{self.std_error:.8f}\t{nrow:d}\n"
@@ -407,18 +401,14 @@ class Fst(GeneticStatistics):
 
     def compute_statistics(self, df):
         super().compute_statistics(df)
-        if self.no_compute:
-            return np.nan, np.nan
+        if self.no_compute_se:
+            return fst(df), np.nan
         else:
             remote_elements = [compute_statistics_helper.remote(df, self.block_size, 'fst')
                                 for _ in range(self.num_replicates)]
             sample_statistics = ray.get(remote_elements)
             sample_statistics = np.concatenate(sample_statistics, axis=None)
-
-            if self.no_compute_se:
-                return fst(df), np.nan
-            else:
-                return fst(df), np.std(sample_statistics, ddof=1)
+            return fst(df), np.std(sample_statistics, ddof=1)
 
     def write_output(self, pop1, pop2, nrow):
         super().write_output(pop1, pop2, nrow)
@@ -454,18 +444,14 @@ class F3(GeneticStatistics):
 
     def compute_statistics(self, df):
         super().compute_statistics(df)
-        if self.no_compute:
-            return np.nan, np.nan
+        if self.no_compute_se:
+            return f3(df), np.nan
         else:
             remote_elements = [compute_statistics_helper.remote(df, self.block_size, 'f3')
                                 for _ in range(self.num_replicates)]
             sample_statistics = ray.get(remote_elements)
             sample_statistics = np.concatenate(sample_statistics, axis=None)
-
-            if self.no_compute_se:
-                return f3(df), np.nan
-            else:
-                return f3(df), np.std(sample_statistics, ddof=1)
+            return f3(df), np.std(sample_statistics, ddof=1)
 
     def write_output(self, pop1, pop2, nrow):
         super().write_output(pop1, pop2, nrow)
@@ -497,18 +483,14 @@ class Pi(GeneticStatistics):
 
     def compute_statistics(self, df):
         super().compute_statistics(df)
-        if self.no_compute:
-            return np.nan, np.nan
+        if self.no_compute_se:
+            return pi(df), np.nan
         else:
             remote_elements = [compute_statistics_helper.remote(df, self.block_size, 'pi')
                                 for _ in range(self.num_replicates)]
             sample_statistics = ray.get(remote_elements)
             sample_statistics = np.concatenate(sample_statistics, axis=None)
-
-            if self.no_compute_se:
-                return pi(df), np.nan
-            else:
-                return pi(df), np.std(sample_statistics, ddof=1)
+            return pi(df), np.std(sample_statistics, ddof=1)
 
     def write_output(self, pop1, pop2, nrow):
         super().write_output(pop1, pop2, nrow)
@@ -529,8 +511,8 @@ class Psi(GeneticStatistics):
                               names=['populus2_frq', 'populus2_ct'],
                               dtype={'populus2_frq':float, 'populus2_ct':int})
         ref_thres = pd.read_csv(self.da_file, header=None, skiprows=1,
-                                names=['ref_pop_thres'],
-                                dtype={'ref_pop_thres':int})
+                                names=['ref_pop_DA_marker'],
+                                dtype={'ref_pop_DA_marker':int})
         df = self.filter_data(pd.concat([df_pop1, df_pop2, ref_thres], axis=1))
 
         self.mean, self.std_error = self.compute_statistics(df)
@@ -545,26 +527,22 @@ class Psi(GeneticStatistics):
         self.write_output(pop1_name, pop2_name, nrow)
 
     def filter_data(self, df):
-        df = df.dropna()[df['ref_pop_thres'] != 0].to_numpy()
+        df = df.dropna()[df['ref_pop_DA_marker'] != 0].to_numpy()
         df[:, [0,2]] = np.where(df[:, [-1,-1]] == 2, 1.0 - df[:, [0,2]], df[:, [0,2]])
         df[:, [0,2]] = np.rint(df[:, [0,2]] * df[:, [1,3]])
         return df[:, :-1]
 
     def compute_statistics(self, df):
         super().compute_statistics(df)
-        if self.no_compute:
-            return np.nan, np.nan
+        if self.no_compute_se:
+            return psi(df), np.nan
         else:
             remote_elements = [compute_statistics_helper.remote(df, self.block_size, 'psi',
                                     downsample_size=self.downsample_size)
                                 for _ in range(self.num_replicates)]
             sample_statistics = ray.get(remote_elements)
             sample_statistics = np.concatenate(sample_statistics, axis=None)
-
-            if self.no_compute_se:
-                return psi(df), np.nan
-            else:
-                return psi(df), np.std(sample_statistics, ddof=1)
+            return psi(df), np.std(sample_statistics, ddof=1)
 
     def write_output(self, pop1, pop2, nrow):
         super().write_output(pop1, pop2, nrow)
