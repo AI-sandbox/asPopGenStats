@@ -351,7 +351,7 @@ class GeneticStatistics(ABC):
         Args:
             pop_file    The frequency file for one population
         '''
-        return pop_file.strip().split('.')[0]
+        return (pop_file.strip().split('/')[-1]).split('.')[0]
 
     def get_mean(self):
         '''
@@ -416,7 +416,7 @@ class Heterozygosity(GeneticStatistics):
 
         self.mean, self.std_error = self.compute_statistics(df)
 
-        pop1_name = self.get_pop_name(config.pop1_file)
+        pop1_name = self.get_pop_name(self.pop1_file)
         nrow = df.shape[0]
         self.write_output(pop1_name, nrow)
 
@@ -459,8 +459,8 @@ class F2(GeneticStatistics):
 
         self.mean, self.std_error = self.compute_statistics(df)
 
-        pop1_name = self.get_pop_name(config.pop1_file)
-        pop2_name = self.get_pop_name(config.pop2_file)
+        pop1_name = self.get_pop_name(self.pop1_file)
+        pop2_name = self.get_pop_name(self.pop2_file)
         nrow = df.shape[0]
         self.write_output(pop1_name, pop2_name, nrow)
 
@@ -527,9 +527,9 @@ class F3(GeneticStatistics):
 
         self.mean, self.std_error = self.compute_statistics(df)
 
-        pop1_name = self.get_pop_name(config.pop1_file)
-        pop2_name = self.get_pop_name(config.pop2_file)
-        pop3_name = self.get_pop_name(config.pop3_file)
+        pop1_name = self.get_pop_name(self.pop1_file)
+        pop2_name = self.get_pop_name(self.pop2_file)
+        pop3_name = self.get_pop_name(self.pop3_file)
         nrow = df.shape[0]
         self.write_output(pop1_name, pop2_name, pop3_name, nrow)
 
@@ -580,10 +580,10 @@ class F4(GeneticStatistics):
 
         self.mean, self.std_error = self.compute_statistics(df)
 
-        pop1_name = self.get_pop_name(config.pop1_file)
-        pop2_name = self.get_pop_name(config.pop2_file)
-        pop3_name = self.get_pop_name(config.pop3_file)
-        pop4_name = self.get_pop_name(config.pop4_file)
+        pop1_name = self.get_pop_name(self.pop1_file)
+        pop2_name = self.get_pop_name(self.pop2_file)
+        pop3_name = self.get_pop_name(self.pop3_file)
+        pop4_name = self.get_pop_name(self.pop4_file)
         nrow = df.shape[0]
         self.write_output(pop1_name, pop2_name, pop3_name, pop4_name, nrow)
 
@@ -626,8 +626,8 @@ class Pi(GeneticStatistics):
 
         self.mean, self.std_error = self.compute_statistics(df)
 
-        pop1_name = self.get_pop_name(config.pop1_file)
-        pop2_name = self.get_pop_name(config.pop2_file)
+        pop1_name = self.get_pop_name(self.pop1_file)
+        pop2_name = self.get_pop_name(self.pop2_file)
         nrow = df.shape[0]
         self.write_output(pop1_name, pop2_name, nrow)
 
@@ -672,8 +672,8 @@ class Psi(GeneticStatistics):
 
         self.mean, self.std_error = self.compute_statistics(df)
 
-        pop1_name = self.get_pop_name(config.pop1_file)
-        pop2_name = self.get_pop_name(config.pop2_file)
+        pop1_name = self.get_pop_name(self.pop1_file)
+        pop2_name = self.get_pop_name(self.pop2_file)
         cond = (df[:, 0] > 0) & (df[:, 2] > 0) & \
                 (df[:, 1] >= self.downsample_size) & \
                 (df[:, 3] >= self.downsample_size)

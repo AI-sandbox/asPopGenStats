@@ -39,7 +39,7 @@ argp.add_argument('-b', '--blocksize', type=int, default=500,
                   help="block size for block bootstrap")
 argp.add_argument('-n', '--num_replicates', type=int, default=100,
                   help="number of replicates for block bootstrap")
-argp.add_argument('-r', '--ref_group', nargs='+', metavar='GROUP',
+argp.add_argument('-r', '--ref_group', nargs='+', metavar='REF_GROUP',
                   help='(F3/Psi only) reference population group for F3/Psi '\
                        'statistics, if multiple population group names, create '\
                        'an aggregated population')
@@ -505,7 +505,6 @@ class F4Computation(object):
 if __name__ == "__main__":
     args = argp.parse_args()
     stat_params = StatisticsParameters(args)
-    print("1111111")
 
     read_ref_pop_info(stat_params, args)
 
