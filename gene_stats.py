@@ -8,6 +8,7 @@ import ray
 from scipy.stats import hypergeom
 import time
 
+NUM_SNP_RATIO = 5  # Set the least number of SNP threshold by a ratio to block_size
 
 # +-*=+-*=+-*=+-*=+-*=+-*=+-*=+-*=+*-=+-*=+*-=+-*=+-*=+-*=+-*=+-*= #
 #                       Statistics Functions                       #
@@ -28,10 +29,14 @@ def compute_statistics_helper(df, block_size, stat, **kwargs):
     boot = CircularBlockBootstrap(block_size, df)
     if stat == 'heterozygosity':
         return boot.apply(heterozygosity, 1)
+    elif stat == 'f2':
+        return boot.apply(f2, 1)
     elif stat == 'fst':
         return boot.apply(fst, 1)
     elif stat == 'f3':
         return boot.apply(f3, 1)
+    elif stat == 'f4':
+        return boot.apply(f4, 1)
     elif stat == 'pi':
         return boot.apply(pi, 1)
     elif stat == 'psi':
@@ -41,6 +46,7 @@ def compute_statistics_helper(df, block_size, stat, **kwargs):
             return boot.apply(psi, 1, {'downsample':kwargs['downsample_size']})
     else:
         raise ValueError('No such statistics is found.')
+
 
 def heterozygosity(df):
     '''
@@ -59,9 +65,33 @@ def heterozygosity(df):
         Paths and timings of the peopling of Polynesia inferred from genomic
         networks. Nature, 597(7877), 522-526.
     '''
+    # df.colname = ['populus1_frq', 'populus1_ct']
     temp = 2 * df[:, 0] * (1 - df[:, 0]) 
     heterozyg = np.mean( temp * (df[:, 1] / (df[:, 1] - 1)) )
     return heterozyg
+
+
+def f2(df):
+    '''
+    The statistics function for F2. Notice that
+    \hat{F2} = (p_A - p_B)^2 - (p_A * (1 - p_A) / (n_A - 1))
+                             - (p_B * (1 - p_B) / (n_B - 1))
+    where p_A is the sample allele frequency in the ancestry of interest at the
+    SNP locus and n_A is the total observations at that site in population A. 
+
+    Reference:
+    (1) Ioannidis, A. G., Blanco-Portillo, J., Sandoval, K., Hagelberg, E.,
+        Barberena-Jonas, C., Hill, A. V., ... & Moreno-Estrada, A. (2021). 
+        Paths and timings of the peopling of Polynesia inferred from genomic
+        networks. Nature, 597(7877), 522-526.
+    '''
+    # df.colname = ['populus1_frq', 'populus1_ct', 'populus2_frq', 'populus2_ct']
+    f2_biased = (df[:, 2] - df[:, 0]) ** 2
+    adjusted_pop1 = df[:, 0] * (1 - df[:, 0]) / (df[:, 1] - 1)
+    adjusted_pop2 = df[:, 2] * (1 - df[:, 2]) / (df[:, 3] - 1)
+    f2 = np.mean(f2_biased - adjusted_pop1 - adjusted_pop2)
+    return f2
+
 
 def fst(df):
     '''
@@ -85,12 +115,14 @@ def fst(df):
         and interpreting FST: the impact of rare variants. Genome Res. 23,
         1514–1521 (2013).
     '''
+    # df.colname = ['populus1_frq', 'populus1_ct', 'populus2_frq', 'populus2_ct']
     f2_biased = (df[:, 2] - df[:, 0]) ** 2
     adjusted_pop1 = df[:, 0] * (1 - df[:, 0]) / (df[:, 1] - 1)
     adjusted_pop2 = df[:, 2] * (1 - df[:, 2]) / (df[:, 3] - 1)
     f2 = np.sum(f2_biased - adjusted_pop1 - adjusted_pop2)
     pi = np.sum(df[:, 0] * (1 - df[:, 2]) + df[:, 2] * (1 - df[:, 0]))
     return f2/pi
+
 
 def f3(df):
     '''
@@ -107,9 +139,29 @@ def f3(df):
         Paths and timings of the peopling of Polynesia inferred from genomic
         networks. Nature, 597(7877), 522-526.
     '''
+    # df.colname = ['populus1_frq', 'populus2_frq', 'outgroup_frq', 'outgroup_ct']
     f3_biased = np.mean((df[:, 2] - df[:, 0]) * (df[:, 2] - df[:, 1]))
     adjusted = np.mean(df[:, 2] * (1 - df[:, 2]) / (df[:, 3] - 1))
     return f3_biased - adjusted
+
+
+def f4(df):
+    '''
+    The statistics function for F4. Notice that
+    \hat{F4}(A, B; C, D) = (p_A - p_B) * (p_C - p_D)
+    where p_A is the sample allele frequency in the ancestry of interest at the
+    SNP locus and n_A is the total observations at that site in population A.
+
+    Reference:
+    (1) Ioannidis, A. G., Blanco-Portillo, J., Sandoval, K., Hagelberg, E.,
+        Barberena-Jonas, C., Hill, A. V., ... & Moreno-Estrada, A. (2021). 
+        Paths and timings of the peopling of Polynesia inferred from genomic
+        networks. Nature, 597(7877), 522-526.
+    '''
+    # df.colname = ['populus1_frq', 'populus2_frq', 'outgroup_frq', 'populus4_frq']
+    f4 = np.mean((df[:, 0] - df[:, 1]) * (df[:, 2] - df[:, 3]))
+    return f4
+
 
 def pi(df):
     '''
@@ -124,8 +176,10 @@ def pi(df):
         Paths and timings of the peopling of Polynesia inferred from genomic
         networks. Nature, 597(7877), 522-526.
     '''
-    pi = np.mean(df[:, 0] * (1 - df[:, 2]) + df[:, 2] * (1 - df[:, 0]))
+    # df.colname = ['populus1_frq', 'populus2_frq']
+    pi = np.mean(df[:, 0] * (1 - df[:, 1]) + df[:, 1] * (1 - df[:, 0]))
     return pi
+
 
 def psi(df, downsample=2):
     '''
@@ -156,6 +210,7 @@ def psi(df, downsample=2):
     # Downsampling size
     n = downsample
 
+    # df.colname = ['populus1_frq', 'populus1_ct', 'populus2_frq', 'populus2_ct']
     cond = (df[:, 0] > 0) & (df[:, 2] > 0) & (df[:, 1] >= n) & (df[:, 3] >= n)
     df = df[cond, :]
     nrow = df.shape[0]
@@ -222,6 +277,7 @@ class UnaryInputConfig:
     num_replicates: int
     output_file: str
 
+
 @dataclass
 class BinaryInputConfig(UnaryInputConfig):
     '''
@@ -229,12 +285,22 @@ class BinaryInputConfig(UnaryInputConfig):
     '''
     pop2_file: str
 
+
 @dataclass
-class TrinaryInputConfig(BinaryInputConfig):
+class TernaryInputConfig(BinaryInputConfig):
     '''
-    The object input for a trinary genetic statistics GS(A, B, C).
+    The object input for a ternary genetic statistics GS(A, B, C).
     '''
     pop3_file: str
+
+
+@dataclass
+class QuaternaryInputConfig(TernaryInputConfig):
+    '''
+    The object input for a ternary genetic statistics GS(A, B, C, D).
+    '''
+    pop4_file: str
+
 
 @dataclass
 class PsiConfig(BinaryInputConfig):
@@ -259,7 +325,7 @@ class GeneticStatistics(ABC):
         self.block_size = int(config.block_size)
         self.num_replicates = int(config.num_replicates)
         self.output_file = self.absolute_path(config.output_file)
-        self.num_SNPs_thres = self.block_size * 5
+        self.num_SNPs_thres = self.block_size * NUM_SNP_RATIO
         self.mean, self.std_error = 0.0, 0.0
 
     def absolute_path(self, f):
@@ -345,9 +411,9 @@ class Heterozygosity(GeneticStatistics):
         df_pop1 = pd.read_csv(self.pop1_file, sep=',', header=0, usecols=range(1,3),
                               names=['populus1_frq', 'populus1_ct'],
                               dtype={'populus1_frq':float, 'populus1_ct':float})
+        # ['populus1_frq', 'populus1_ct']
         df = self.filter_data(df_pop1)
 
-        self.mean, self.std_error = 0.0, 0.0
         self.mean, self.std_error = self.compute_statistics(df)
 
         pop1_name = self.get_pop_name(config.pop1_file)
@@ -360,6 +426,7 @@ class Heterozygosity(GeneticStatistics):
     def compute_statistics(self, df):
         super().compute_statistics(df)
         if self.no_compute_se:
+            print("Not enough number of SNPs for block bootstrap!")
             return heterozygosity(df), np.nan
         else:
             remote_elements = [compute_statistics_helper.remote(df, self.block_size,
@@ -375,7 +442,7 @@ class Heterozygosity(GeneticStatistics):
             f.write(output)
 
 
-class Fst(GeneticStatistics):
+class F2(GeneticStatistics):
     def __init__(self, config):
         super().__init__(config)
         self.pop1_file = self.absolute_path_pop_file(self.data_dir, config.pop1_file)
@@ -387,6 +454,7 @@ class Fst(GeneticStatistics):
         df_pop2 = pd.read_csv(self.pop2_file, sep=',', header=0, usecols=range(1,3),
                               names=['populus2_frq', 'populus2_ct'],
                               dtype={'populus2_frq':float, 'populus2_ct':float})
+        # ['populus1_frq', 'populus1_ct', 'populus2_frq', 'populus2_ct']
         df = self.filter_data(pd.concat([df_pop1, df_pop2], axis=1))
 
         self.mean, self.std_error = self.compute_statistics(df)
@@ -402,6 +470,30 @@ class Fst(GeneticStatistics):
     def compute_statistics(self, df):
         super().compute_statistics(df)
         if self.no_compute_se:
+            print("Not enough number of SNPs for block bootstrap!")
+            return f2(df), np.nan
+        else:
+            remote_elements = [compute_statistics_helper.remote(df, self.block_size, 'f2')
+                                for _ in range(self.num_replicates)]
+            sample_statistics = ray.get(remote_elements)
+            sample_statistics = np.concatenate(sample_statistics, axis=None)
+            return f2(df), np.std(sample_statistics, ddof=1)
+
+    def write_output(self, pop1, pop2, nrow):
+        super().write_output(pop1, pop2, nrow)
+
+
+class Fst(F2):
+    def __init__(self, config):
+        super().__init__(config)
+
+    def filter_data(self, df):
+        return super().filter_data(df)
+
+    def compute_statistics(self, df):
+        super().compute_statistics(df)
+        if self.no_compute_se:
+            print("Not enough number of SNPs for block bootstrap!")
             return fst(df), np.nan
         else:
             remote_elements = [compute_statistics_helper.remote(df, self.block_size, 'fst')
@@ -430,14 +522,16 @@ class F3(GeneticStatistics):
         df_outgroup = pd.read_csv(self.pop3_file, sep=',', header=0, usecols=range(1,3),
                                   names=['outgroup_frq', 'outgroup_ct'],
                                   dtype={'outgroup_frq':float, 'outgroup_ct':float})
+        # ['populus1_frq', 'populus2_frq', 'outgroup_frq', 'outgroup_ct']
         df = self.filter_data(pd.concat([df_pop1, df_pop2, df_outgroup], axis=1))
 
         self.mean, self.std_error = self.compute_statistics(df)
 
         pop1_name = self.get_pop_name(config.pop1_file)
         pop2_name = self.get_pop_name(config.pop2_file)
+        pop3_name = self.get_pop_name(config.pop3_file)
         nrow = df.shape[0]
-        self.write_output(pop1_name, pop2_name, nrow)
+        self.write_output(pop1_name, pop2_name, pop3_name, nrow)
 
     def filter_data(self, df):
         return df.dropna().query('outgroup_ct > 1').to_numpy()
@@ -445,6 +539,7 @@ class F3(GeneticStatistics):
     def compute_statistics(self, df):
         super().compute_statistics(df)
         if self.no_compute_se:
+            print("Not enough number of SNPs for block bootstrap!")
             return f3(df), np.nan
         else:
             remote_elements = [compute_statistics_helper.remote(df, self.block_size, 'f3')
@@ -453,8 +548,65 @@ class F3(GeneticStatistics):
             sample_statistics = np.concatenate(sample_statistics, axis=None)
             return f3(df), np.std(sample_statistics, ddof=1)
 
-    def write_output(self, pop1, pop2, nrow):
-        super().write_output(pop1, pop2, nrow)
+    def write_output(self, pop1, pop2, pop3, nrow):
+        output = f'F3({pop1:s}, {pop2:s}; {pop3:s})\t{self.mean:.8f}\t' \
+                 f'{self.std_error:.8f}\t{nrow:d}\n'
+        with open(self.output_file, 'a') as f:
+            f.write(output)
+
+
+class F4(GeneticStatistics):
+    def __init__(self, config):
+        super().__init__(config)
+        self.pop1_file = self.absolute_path_pop_file(self.data_dir, config.pop1_file)
+        self.pop2_file = self.absolute_path_pop_file(self.data_dir, config.pop2_file)
+        self.pop3_file = self.absolute_path_pop_file(self.data_dir, config.pop3_file)
+        self.pop4_file = self.absolute_path_pop_file(self.data_dir, config.pop4_file)
+
+        df_pop1 = pd.read_csv(self.pop1_file, sep=',', header=0, usecols=[1],
+                              names=['populus1_frq'],
+                              dtype={'populus1_frq':float})
+        df_pop2 = pd.read_csv(self.pop2_file, sep=',', header=0, usecols=[1],
+                              names=['populus2_frq'],
+                              dtype={'populus2_frq':float})
+        df_outgroup = pd.read_csv(self.pop3_file, sep=',', header=0, usecols=[1],
+                                  names=['outgroup_frq'],
+                                  dtype={'outgroup_frq':float})
+        df_pop4 = pd.read_csv(self.pop4_file, sep=',', header=0, usecols=[1],
+                              names=['populus4_frq'],
+                              dtype={'populus4_frq':float})
+        # ['populus1_frq', 'populus2_frq', 'outgroup_frq', 'populus4_frq']
+        df = self.filter_data(pd.concat([df_pop1, df_pop2, df_outgroup, df_pop4], axis=1))
+
+        self.mean, self.std_error = self.compute_statistics(df)
+
+        pop1_name = self.get_pop_name(config.pop1_file)
+        pop2_name = self.get_pop_name(config.pop2_file)
+        pop3_name = self.get_pop_name(config.pop3_file)
+        pop4_name = self.get_pop_name(config.pop4_file)
+        nrow = df.shape[0]
+        self.write_output(pop1_name, pop2_name, pop3_name, pop4_name, nrow)
+
+    def filter_data(self, df):
+        return df.dropna().to_numpy()
+
+    def compute_statistics(self, df):
+        super().compute_statistics(df)
+        if self.no_compute_se:
+            print("Not enough number of SNPs for block bootstrap!")
+            return f4(df), np.nan
+        else:
+            remote_elements = [compute_statistics_helper.remote(df, self.block_size, 'f4')
+                                for _ in range(self.num_replicates)]
+            sample_statistics = ray.get(remote_elements)
+            sample_statistics = np.concatenate(sample_statistics, axis=None)
+            return f4(df), np.std(sample_statistics, ddof=1)
+
+    def write_output(self, pop1, pop2, pop3, pop4, nrow):
+        output = f'F4({pop1:s}, {pop2:s}; {pop3:s}, {pop4:s})\t{self.mean:.8f}\t' \
+                 f'{self.std_error:.8f}\t{nrow:d}\n'
+        with open(self.output_file, 'a') as f:
+            f.write(output)
 
 
 class Pi(GeneticStatistics):
@@ -463,12 +615,13 @@ class Pi(GeneticStatistics):
         self.pop1_file = self.absolute_path_pop_file(self.data_dir, config.pop1_file)
         self.pop2_file = self.absolute_path_pop_file(self.data_dir, config.pop2_file)
 
-        df_pop1 = pd.read_csv(self.pop1_file, sep=',', header=0, usecols=range(1,3),
-                              names=['populus1_frq', 'populus1_ct'],
-                              dtype={'populus1_frq':float, 'populus1_ct':float})
-        df_pop2 = pd.read_csv(self.pop2_file, sep=',', header=0, usecols=range(1,3),
-                              names=['populus2_frq', 'populus2_ct'],
-                              dtype={'populus2_frq':float, 'populus2_ct':float})
+        df_pop1 = pd.read_csv(self.pop1_file, sep=',', header=0, usecols=[1],
+                              names=['populus1_frq'],
+                              dtype={'populus1_frq':float})
+        df_pop2 = pd.read_csv(self.pop2_file, sep=',', header=0, usecols=[1],
+                              names=['populus2_frq'],
+                              dtype={'populus2_frq':float})
+        # ['populus1_frq', 'populus2_frq']
         df = self.filter_data(pd.concat([df_pop1, df_pop2], axis=1))
 
         self.mean, self.std_error = self.compute_statistics(df)
@@ -484,6 +637,7 @@ class Pi(GeneticStatistics):
     def compute_statistics(self, df):
         super().compute_statistics(df)
         if self.no_compute_se:
+            print("Not enough number of SNPs for block bootstrap!")
             return pi(df), np.nan
         else:
             remote_elements = [compute_statistics_helper.remote(df, self.block_size, 'pi')
@@ -513,6 +667,7 @@ class Psi(GeneticStatistics):
         ref_thres = pd.read_csv(self.da_file, header=None, skiprows=1,
                                 names=['ref_pop_DA_marker'],
                                 dtype={'ref_pop_DA_marker':int})
+        # ['populus1_frq', 'populus1_ct', 'populus2_frq', 'populus2_ct']
         df = self.filter_data(pd.concat([df_pop1, df_pop2, ref_thres], axis=1))
 
         self.mean, self.std_error = self.compute_statistics(df)
@@ -535,6 +690,7 @@ class Psi(GeneticStatistics):
     def compute_statistics(self, df):
         super().compute_statistics(df)
         if self.no_compute_se:
+            print("Not enough number of SNPs for block bootstrap!")
             return psi(df), np.nan
         else:
             remote_elements = [compute_statistics_helper.remote(df, self.block_size, 'psi',
