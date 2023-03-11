@@ -254,27 +254,26 @@ def read_ref_pop_info(params, args_):
 #                  Computation of the Statistics                   #
 # +-*=+-*=+-*=+-*=+-*=+-*=+-*=+-*=+*-=+-*=+*-=+-*=+-*=+-*=+-*=+-*= #
 
-def stats_input(pops, stats_name, block_size, num_replicates, data_dir,
-                output_filename, outgroup_filename="",
-                DA_filename="", downsample_size=2):
+def stats_input(pops, params):
     '''
     Create a new object of the given genetic statistics based on the given
     configuration and compute the mean and standard error of the statistics.
     Args:
         pops                A list of population names
-        stats_name          Genetic statistics
-        block_size          Block size for block bootstrap
-        num_replicates      Number of replicates for the bootstrap
-        data_dir            Directory for frequency files (.freq)
-        output_filename     Name for the output text file (.txt) of the statistics
-        outgroup_filename   (F3/Psi) Frequency file name for the outgroup populations
-        DA_filename         (Psi) Derived allele position file name
-        downsample_size     (Psi) Downsampling size (int)
+        params              A struct that contains input parameters of statistics
     Return:
         stats_mean          The mean of the statistics
         stats_std_error     The standard error of the statistics
     ''' 
-    pops = [pop + ".freq" for pop in pops]
+    pops = [pop + ".freq" for pop in pops]          # A list of population names
+    stats_name = params.stats_name                  # Genetic statistics
+    block_size = params.blocksize                   # Block size for block bootstrap
+    num_replicates = params.num_replicates          # Number of replicates for the bootstrap
+    data_dir = params.data_dir                      # Directory for frequency files (.freq)
+    output_filename = params.output_file_abspath    # Name for the output text file (.txt) of the statistics
+    outgroup_filename = params.aggr_file_abspath    # (F3/Psi) Frequency file name for the outgroup populations
+    DA_filename = params.DA_file_abspath            # (Psi) Derived allele position file name
+    downsample_size = params.downsample_size        # (Psi) Downsampling size (int)
     if stats_name == 'heterozygosity':
         config = gst.UnaryInputConfig(data_dir=data_dir,
                                       pop1_file=pops[0],
@@ -348,15 +347,7 @@ class UnaryComputation(object):
         out_mtx_se = np.zeros(num_pop1, )
         for i in trange(num_pop1):
             pop1 = populus_list1[0][i]
-            stats_mean, stats_std_error = stats_input([pop1],
-                                                      params.stats_name,
-                                                      params.blocksize,
-                                                      params.num_replicates,
-                                                      params.data_dir,
-                                                      params.output_file_abspath,
-                                                      params.aggr_file_abspath,
-                                                      params.DA_file_abspath,
-                                                      params.downsample_size)
+            stats_mean, stats_std_error = stats_input([pop1], params)
             out_mtx[i], out_mtx_se[i] = stats_mean, stats_std_error
             print(f"{pop1:s}: {stats_mean:f}, {stats_std_error:f}")
         self.save_output_file(params, out_mtx, out_mtx_se, populus_list1)
@@ -394,15 +385,7 @@ class GeneralComputation(object):
             pop1 = populus_list1[i]
             for j in range(i + 1, num_pop1):
                 pop2 = populus_list1[j]
-                stats_mean, stats_std_error = stats_input([pop1, pop2],
-                                                          params.stats_name,
-                                                          params.blocksize,
-                                                          params.num_replicates,
-                                                          params.data_dir,
-                                                          params.output_file_abspath,
-                                                          params.aggr_file_abspath,
-                                                          params.DA_file_abspath,
-                                                          params.downsample_size)
+                stats_mean, stats_std_error = stats_input([pop1, pop2], params)
                 out_mtx[i][j], out_mtx_se[i][j] = stats_mean, stats_std_error
                 print(f"{pop1:s}-{pop2:s}: "\
                       f"{out_mtx[i][j]:f}, {out_mtx_se[i][j]:f}")
@@ -428,15 +411,7 @@ class GeneralComputation(object):
             pop1 = populus_list1[i]
             for j in range(num_pop2):
                 pop2 = populus_list2[j]
-                stats_mean, stats_std_error = stats_input([pop1, pop2],
-                                                          params.stats_name,
-                                                          params.blocksize,
-                                                          params.num_replicates,
-                                                          params.data_dir,
-                                                          params.output_file_abspath,
-                                                          params.aggr_file_abspath,
-                                                          params.DA_file_abspath,
-                                                          params.downsample_size)
+                stats_mean, stats_std_error = stats_input([pop1, pop2], params)
                 out_mtx[i][j], out_mtx_se[i][j] = stats_mean, stats_std_error
                 print(f"{pop1:s}-{pop2:s}: "\
                       f"{out_mtx[i][j]:f}, {out_mtx_se[i][j]:f}")
@@ -478,14 +453,7 @@ class F4Computation(object):
                 for j in range(num_pop2):
                     pop2 = populus_list2[j]
                     stats_mean, stats_std_error = stats_input([pop1, pop2, pop4],
-                                                              params.stats_name,
-                                                              params.blocksize,
-                                                              params.num_replicates,
-                                                              params.data_dir,
-                                                              params.output_file_abspath,
-                                                              params.aggr_file_abspath,
-                                                              params.DA_file_abspath,
-                                                              params.downsample_size)
+                                                              params)
                     out_mtx[i][j][k], out_mtx_se[i][j][k] = stats_mean, stats_std_error
                     print(f"F4({pop1:s}, {pop2:s}; O, {pop4:s}): "\
                           f"{out_mtx[i][j][k]:f}, {out_mtx_se[i][j][k]:f}")

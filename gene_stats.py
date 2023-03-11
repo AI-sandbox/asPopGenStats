@@ -315,6 +315,16 @@ class PsiConfig(BinaryInputConfig):
 #                         Statistics Objects                       #
 # +-*=+-*=+-*=+-*=+-*=+-*=+-*=+-*=+*-=+-*=+*-=+-*=+-*=+-*=+-*=+-*= #
 
+def read_freq(filename):
+    return pd.read_csv(filename, sep='\t', header=0, usecols=["MAF"],
+                       dtype={"MAF":float})
+
+
+def read_freq_and_ct(filename):
+    return pd.read_csv(filename, sep='\t', header=0, usecols=["MAF", "NCHROBS"],
+                       dtype={"MAF":float, "NCHROBS":float})
+
+
 class GeneticStatistics(ABC):
     '''
     The object for a generic genetic statistics.
@@ -408,9 +418,8 @@ class Heterozygosity(GeneticStatistics):
         super().__init__(config)
         self.pop1_file = self.absolute_path_pop_file(self.data_dir, config.pop1_file)
 
-        df_pop1 = pd.read_csv(self.pop1_file, sep=',', header=0, usecols=range(1,3),
-                              names=['populus1_frq', 'populus1_ct'],
-                              dtype={'populus1_frq':float, 'populus1_ct':float})
+        df_pop1 = read_freq_and_ct(self.pop1_file)
+        df_pop1.columns = ["populus1_frq", "populus1_ct"]
         # ['populus1_frq', 'populus1_ct']
         df = self.filter_data(df_pop1)
 
@@ -448,12 +457,10 @@ class F2(GeneticStatistics):
         self.pop1_file = self.absolute_path_pop_file(self.data_dir, config.pop1_file)
         self.pop2_file = self.absolute_path_pop_file(self.data_dir, config.pop2_file)
 
-        df_pop1 = pd.read_csv(self.pop1_file, sep=',', header=0, usecols=range(1,3),
-                              names=['populus1_frq', 'populus1_ct'],
-                              dtype={'populus1_frq':float, 'populus1_ct':float})
-        df_pop2 = pd.read_csv(self.pop2_file, sep=',', header=0, usecols=range(1,3),
-                              names=['populus2_frq', 'populus2_ct'],
-                              dtype={'populus2_frq':float, 'populus2_ct':float})
+        df_pop1 = read_freq_and_ct(self.pop1_file)
+        df_pop1.columns = ["populus1_frq", "populus1_ct"]
+        df_pop2 = read_freq_and_ct(self.pop2_file)
+        df_pop2.columns = ["populus2_frq", "populus2_ct"]
         # ['populus1_frq', 'populus1_ct', 'populus2_frq', 'populus2_ct']
         df = self.filter_data(pd.concat([df_pop1, df_pop2], axis=1))
 
@@ -513,15 +520,12 @@ class F3(GeneticStatistics):
         self.pop2_file = self.absolute_path_pop_file(self.data_dir, config.pop2_file)
         self.pop3_file = self.absolute_path_pop_file(self.data_dir, config.pop3_file)
 
-        df_pop1 = pd.read_csv(self.pop1_file, sep=',', header=0, usecols=[1],
-                              names=['populus1_frq'],
-                              dtype={'populus1_frq':float})
-        df_pop2 = pd.read_csv(self.pop2_file, sep=',', header=0, usecols=[1],
-                              names=['populus2_frq'],
-                              dtype={'populus2_frq':float})
-        df_outgroup = pd.read_csv(self.pop3_file, sep=',', header=0, usecols=range(1,3),
-                                  names=['outgroup_frq', 'outgroup_ct'],
-                                  dtype={'outgroup_frq':float, 'outgroup_ct':float})
+        df_pop1 = read_freq(self.pop1_file)
+        df_pop1.columns = ["populus1_frq"]
+        df_pop2 = read_freq(self.pop2_file)
+        df_pop2.columns = ["populus2_frq"]
+        df_outgroup = read_freq_and_ct(self.pop3_file)
+        df_outgroup.columns = ["outgroup_frq", "outgroup_ct"]
         # ['populus1_frq', 'populus2_frq', 'outgroup_frq', 'outgroup_ct']
         df = self.filter_data(pd.concat([df_pop1, df_pop2, df_outgroup], axis=1))
 
@@ -563,18 +567,14 @@ class F4(GeneticStatistics):
         self.pop3_file = self.absolute_path_pop_file(self.data_dir, config.pop3_file)
         self.pop4_file = self.absolute_path_pop_file(self.data_dir, config.pop4_file)
 
-        df_pop1 = pd.read_csv(self.pop1_file, sep=',', header=0, usecols=[1],
-                              names=['populus1_frq'],
-                              dtype={'populus1_frq':float})
-        df_pop2 = pd.read_csv(self.pop2_file, sep=',', header=0, usecols=[1],
-                              names=['populus2_frq'],
-                              dtype={'populus2_frq':float})
-        df_outgroup = pd.read_csv(self.pop3_file, sep=',', header=0, usecols=[1],
-                                  names=['outgroup_frq'],
-                                  dtype={'outgroup_frq':float})
-        df_pop4 = pd.read_csv(self.pop4_file, sep=',', header=0, usecols=[1],
-                              names=['populus4_frq'],
-                              dtype={'populus4_frq':float})
+        df_pop1 = read_freq(self.pop1_file)
+        df_pop1.columns = ["populus1_frq"]
+        df_pop2 = read_freq(self.pop2_file)
+        df_pop2.columns = ["populus2_frq"]
+        df_outgroup = read_freq(self.pop3_file)
+        df_outgroup.columns = ["outgroup_frq"]
+        df_pop4 = read_freq(self.pop4_file)
+        df_pop4.columns = ["populus4_frq"]
         # ['populus1_frq', 'populus2_frq', 'outgroup_frq', 'populus4_frq']
         df = self.filter_data(pd.concat([df_pop1, df_pop2, df_outgroup, df_pop4], axis=1))
 
@@ -615,12 +615,10 @@ class Pi(GeneticStatistics):
         self.pop1_file = self.absolute_path_pop_file(self.data_dir, config.pop1_file)
         self.pop2_file = self.absolute_path_pop_file(self.data_dir, config.pop2_file)
 
-        df_pop1 = pd.read_csv(self.pop1_file, sep=',', header=0, usecols=[1],
-                              names=['populus1_frq'],
-                              dtype={'populus1_frq':float})
-        df_pop2 = pd.read_csv(self.pop2_file, sep=',', header=0, usecols=[1],
-                              names=['populus2_frq'],
-                              dtype={'populus2_frq':float})
+        df_pop1 = read_freq(self.pop1_file)
+        df_pop1.columns = ["populus1_frq"]
+        df_pop2 = read_freq(self.pop2_file)
+        df_pop2.columns = ["populus2_frq"]
         # ['populus1_frq', 'populus2_frq']
         df = self.filter_data(pd.concat([df_pop1, df_pop2], axis=1))
 
@@ -658,12 +656,11 @@ class Psi(GeneticStatistics):
         self.da_file = self.absolute_path_pop_file(self.data_dir, config.da_file)
         self.downsample_size = int(config.downsample_size)
 
-        df_pop1 = pd.read_csv(self.pop1_file, sep=',', header=0, usecols=range(1,3),
-                              names=['populus1_frq', 'populus1_ct'],
-                              dtype={'populus1_frq':float, 'populus1_ct':int})
-        df_pop2 = pd.read_csv(self.pop2_file, sep=',', header=0, usecols=range(1,3),
-                              names=['populus2_frq', 'populus2_ct'],
-                              dtype={'populus2_frq':float, 'populus2_ct':int})
+        df_pop1 = pd.read_csv(self.pop1_file, sep='\t', header=0)
+        df_pop1 = read_freq_and_ct(self.pop1_file)
+        df_pop1.columns = ["populus1_frq", "populus1_ct"]
+        df_pop2 = read_freq_and_ct(self.pop2_file)
+        df_pop2.columns = ["populus2_frq", "populus2_ct"]
         ref_thres = pd.read_csv(self.da_file, header=None, skiprows=1,
                                 names=['ref_pop_DA_marker'],
                                 dtype={'ref_pop_DA_marker':int})
