@@ -165,18 +165,19 @@ def get_msp_data(chr_idx, famid_id2pop_):
 
 def calculate_gnomix_row_repeat(pos_col_, spos_col_gnx_):
     spos2count_ = np.zeros_like(spos_col_gnx_)
+    spos_col_gnx_ = np.append(spos_col_gnx_, len(pos_col_))
     prev_idx = 0
     curr_idx = 0
-    curr_idx_gnx = 0
+    curr_idx_gnx = 1
     gnx_value = spos_col_gnx_[curr_idx_gnx]
-    while (curr_idx < len(pos_col_) and curr_idx_gnx < len(spos_col_gnx_)):
+    while (curr_idx < len(pos_col_) and curr_idx_gnx < len(spos_col_gnx_) - 1):
         if (curr_idx != 0 and pos_col_[curr_idx] == gnx_value):
-            spos2count_[curr_idx_gnx] = curr_idx - prev_idx
+            spos2count_[curr_idx_gnx - 1] = curr_idx - prev_idx
             prev_idx = curr_idx
             curr_idx_gnx += 1
             gnx_value = spos_col_gnx_[curr_idx_gnx]
         curr_idx += 1
-    spos2count_[curr_idx_gnx] = curr_idx - prev_idx
+    spos2count_[curr_idx_gnx - 1] = len(pos_col_) - prev_idx
     return spos2count_
 
 @ray.remote
