@@ -1,5 +1,22 @@
 # asPopGenStats
 
+
+## First Stage
+gnomix_frq: a conversion that aggregates information from Gnomix output files (.msp)
+and vcf files(.vcf) and creates frequency files (.frq) for population groups masked by specific subpopulation (mask_group). (Beware to modify variable "data_dir" to your own data directory,
+which includes a set of chromosome data directories, each with vcf and msp files, in "gnomix_frq.py". Please also save a sample info file, "hawaiiPopInfo.csv", that gives sample's unique identifier created by the family ID and the sample ID, "famid_id" and the sample's population group, "population" to the same path of "gnomix_frq.py".)
+usage: gnomix_frq.py [-h] [-m MASK_GROUP]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -m MASK_GROUP, --mask_group MASK_GROUP
+                        mask subpopulation group for alleles
+
+An example of the execution code:
+python3 gnomix_frq.py -m Polynesian
+
+## Second Stage
+main.py: a main execution file that computes genetic statistics.
 Currently, ancestry-specific versions of “F2”, “F3”, “F4”, “F_st”, “Pi”, “Psi”, and Heterozygosity are supported.
 
 usage: main.py [-h] -f FILE [FILE ...] -t DATA_DIR [-b BLOCKSIZE] [-n NUM_REPLICATES]  
