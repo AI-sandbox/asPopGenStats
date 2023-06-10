@@ -276,6 +276,7 @@ class UnaryInputConfig:
     block_size: int
     num_replicates: int
     output_file: str
+    is_masked: bool
 
 
 @dataclass
@@ -315,14 +316,24 @@ class PsiConfig(BinaryInputConfig):
 #                         Statistics Objects                       #
 # +-*=+-*=+-*=+-*=+-*=+-*=+-*=+-*=+*-=+-*=+*-=+-*=+-*=+-*=+-*=+-*= #
 
-def read_freq(filename):
-    return pd.read_csv(filename, sep='\t', header=0, usecols=["MAF"],
-                       dtype={"MAF":float})
+def read_freq(filename, is_masked):
+    if is_masked:
+        return pd.read_csv(filename, sep='\t', header=0, usecols=["MAF_MSK"],
+                           dtype={"MAF_MSK":float})
+    else:
+        return pd.read_csv(filename, sep='\t', header=0, usecols=["MAF"],
+                           dtype={"MAF":float})
 
 
-def read_freq_and_ct(filename):
-    return pd.read_csv(filename, sep='\t', header=0, usecols=["MAF", "NCHROBS"],
-                       dtype={"MAF":float, "NCHROBS":float})
+def read_freq_and_ct(filename, is_masked):
+    if is_masked:
+        return pd.read_csv(filename, sep='\t', header=0,
+                           usecols=["MAF_MSK", "NCHROBS_MSK"],
+                           dtype={"MAF_MSK":float, "NCHROBS_MSK":float})
+    else:
+        return pd.read_csv(filename, sep='\t', header=0,
+                           usecols=["MAF", "NCHROBS"],
+                           dtype={"MAF":float, "NCHROBS":float})
 
 
 class GeneticStatistics(ABC):
@@ -335,6 +346,7 @@ class GeneticStatistics(ABC):
         self.block_size = int(config.block_size)
         self.num_replicates = int(config.num_replicates)
         self.output_file = self.absolute_path(config.output_file)
+        self.is_masked = config.is_masked
         self.num_SNPs_thres = self.block_size * NUM_SNP_RATIO
         self.mean, self.std_error = 0.0, 0.0
 
@@ -418,7 +430,7 @@ class Heterozygosity(GeneticStatistics):
         super().__init__(config)
         self.pop1_file = self.absolute_path_pop_file(self.data_dir, config.pop1_file)
 
-        df_pop1 = read_freq_and_ct(self.pop1_file)
+        df_pop1 = read_freq_and_ct(self.pop1_file, self.is_masked)
         df_pop1.columns = ["populus1_frq", "populus1_ct"]
         # ['populus1_frq', 'populus1_ct']
         df = self.filter_data(df_pop1)
@@ -457,9 +469,9 @@ class F2(GeneticStatistics):
         self.pop1_file = self.absolute_path_pop_file(self.data_dir, config.pop1_file)
         self.pop2_file = self.absolute_path_pop_file(self.data_dir, config.pop2_file)
 
-        df_pop1 = read_freq_and_ct(self.pop1_file)
+        df_pop1 = read_freq_and_ct(self.pop1_file, self.is_masked)
         df_pop1.columns = ["populus1_frq", "populus1_ct"]
-        df_pop2 = read_freq_and_ct(self.pop2_file)
+        df_pop2 = read_freq_and_ct(self.pop2_file, self.is_masked)
         df_pop2.columns = ["populus2_frq", "populus2_ct"]
         # ['populus1_frq', 'populus1_ct', 'populus2_frq', 'populus2_ct']
         df = self.filter_data(pd.concat([df_pop1, df_pop2], axis=1))
@@ -520,11 +532,11 @@ class F3(GeneticStatistics):
         self.pop2_file = self.absolute_path_pop_file(self.data_dir, config.pop2_file)
         self.pop3_file = self.absolute_path_pop_file(self.data_dir, config.pop3_file)
 
-        df_pop1 = read_freq(self.pop1_file)
+        df_pop1 = read_freq(self.pop1_file, self.is_masked)
         df_pop1.columns = ["populus1_frq"]
-        df_pop2 = read_freq(self.pop2_file)
+        df_pop2 = read_freq(self.pop2_file, self.is_masked)
         df_pop2.columns = ["populus2_frq"]
-        df_outgroup = read_freq_and_ct(self.pop3_file)
+        df_outgroup = read_freq_and_ct(self.pop3_file, self.is_masked)
         df_outgroup.columns = ["outgroup_frq", "outgroup_ct"]
         # ['populus1_frq', 'populus2_frq', 'outgroup_frq', 'outgroup_ct']
         df = self.filter_data(pd.concat([df_pop1, df_pop2, df_outgroup], axis=1))
@@ -567,13 +579,13 @@ class F4(GeneticStatistics):
         self.pop3_file = self.absolute_path_pop_file(self.data_dir, config.pop3_file)
         self.pop4_file = self.absolute_path_pop_file(self.data_dir, config.pop4_file)
 
-        df_pop1 = read_freq(self.pop1_file)
+        df_pop1 = read_freq(self.pop1_file, self.is_masked)
         df_pop1.columns = ["populus1_frq"]
-        df_pop2 = read_freq(self.pop2_file)
+        df_pop2 = read_freq(self.pop2_file, self.is_masked)
         df_pop2.columns = ["populus2_frq"]
-        df_outgroup = read_freq(self.pop3_file)
+        df_outgroup = read_freq(self.pop3_file, self.is_masked)
         df_outgroup.columns = ["outgroup_frq"]
-        df_pop4 = read_freq(self.pop4_file)
+        df_pop4 = read_freq(self.pop4_file, self.is_masked)
         df_pop4.columns = ["populus4_frq"]
         # ['populus1_frq', 'populus2_frq', 'outgroup_frq', 'populus4_frq']
         df = self.filter_data(pd.concat([df_pop1, df_pop2, df_outgroup, df_pop4], axis=1))
@@ -615,9 +627,9 @@ class Pi(GeneticStatistics):
         self.pop1_file = self.absolute_path_pop_file(self.data_dir, config.pop1_file)
         self.pop2_file = self.absolute_path_pop_file(self.data_dir, config.pop2_file)
 
-        df_pop1 = read_freq(self.pop1_file)
+        df_pop1 = read_freq(self.pop1_file, self.is_masked)
         df_pop1.columns = ["populus1_frq"]
-        df_pop2 = read_freq(self.pop2_file)
+        df_pop2 = read_freq(self.pop2_file, self.is_masked)
         df_pop2.columns = ["populus2_frq"]
         # ['populus1_frq', 'populus2_frq']
         df = self.filter_data(pd.concat([df_pop1, df_pop2], axis=1))
@@ -657,9 +669,9 @@ class Psi(GeneticStatistics):
         self.downsample_size = int(config.downsample_size)
 
         df_pop1 = pd.read_csv(self.pop1_file, sep='\t', header=0)
-        df_pop1 = read_freq_and_ct(self.pop1_file)
+        df_pop1 = read_freq_and_ct(self.pop1_file, self.is_masked)
         df_pop1.columns = ["populus1_frq", "populus1_ct"]
-        df_pop2 = read_freq_and_ct(self.pop2_file)
+        df_pop2 = read_freq_and_ct(self.pop2_file, self.is_masked)
         df_pop2.columns = ["populus2_frq", "populus2_ct"]
         ref_thres = pd.read_csv(self.da_file, header=None, skiprows=1,
                                 names=['ref_pop_DA_marker'],

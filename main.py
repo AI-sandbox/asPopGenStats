@@ -49,6 +49,8 @@ argp.add_argument('-D', '--DAF', type=float, default=-1.0,
                        'no polarization)')
 argp.add_argument('-d', '--downsample_size', type=int, default=2,
                   help='(Psi only) downsampling size for Psi statistics')
+argp.add_argument('-m', '--mask', type=bool, default=False,
+                  help='Use masked data for genetic statistics computation')
 argp.add_argument('--rm_DA_files', type=bool, default=False,
                   help='(Boolean) whether we will remove existing files that '\
                        'indicates SNP positions for derived alleles at the new run')
@@ -110,6 +112,7 @@ class StatisticsParameters(object):
         self.blocksize = args_.blocksize
         self.num_replicates = args_.num_replicates
         self.downsample_size = args_.downsample_size
+        self.is_masked = args_.mask
 
 
     def read_population_name(self, populus_file):
@@ -274,12 +277,15 @@ def stats_input(pops, params):
     outgroup_filename = params.aggr_file_abspath    # (F3/Psi) Frequency file name for the outgroup populations
     DA_filename = params.DA_file_abspath            # (Psi) Derived allele position file name
     downsample_size = params.downsample_size        # (Psi) Downsampling size (int)
+    is_masked = params.is_masked                    # Whether to use masked frequency data
+
     if stats_name == 'heterozygosity':
         config = gst.UnaryInputConfig(data_dir=data_dir,
                                       pop1_file=pops[0],
                                       block_size=block_size,
                                       num_replicates=num_replicates,
-                                      output_file=output_filename)
+                                      output_file=output_filename,
+                                      is_masked=is_masked)
         stats_obj = gst.Heterozygosity(config)
     elif stats_name in ['f2', 'fst', 'pi']:
         config = gst.BinaryInputConfig(data_dir=data_dir,
@@ -287,7 +293,8 @@ def stats_input(pops, params):
                                        pop2_file=pops[1],
                                        block_size=block_size,
                                        num_replicates=num_replicates,
-                                       output_file=output_filename)
+                                       output_file=output_filename,
+                                       is_masked=is_masked)
         if stats_name == 'f2':
             stats_obj = gst.F2(config)
         elif stats_name == 'fst':
@@ -301,7 +308,8 @@ def stats_input(pops, params):
                                         block_size=block_size,
                                         num_replicates=num_replicates,
                                         output_file=output_filename,
-                                        pop3_file=outgroup_filename)
+                                        pop3_file=outgroup_filename,
+                                        is_masked=is_masked)
         stats_obj = gst.F3(config)
     elif stats_name == 'f4':
         config = gst.QuaternaryInputConfig(data_dir=data_dir,
@@ -311,7 +319,8 @@ def stats_input(pops, params):
                                            num_replicates=num_replicates,
                                            output_file=output_filename,
                                            pop3_file=outgroup_filename,
-                                           pop4_file=pops[2])
+                                           pop4_file=pops[2],
+                                           is_masked=is_masked)
         stats_obj = gst.F4(config)
     else:
         config = gst.PsiConfig(data_dir=data_dir,
@@ -321,7 +330,8 @@ def stats_input(pops, params):
                                num_replicates=num_replicates,
                                output_file=output_filename,
                                da_file=DA_filename,
-                               downsample_size=downsample_size)
+                               downsample_size=downsample_size,
+                               is_masked=is_masked)
         stats_obj = gst.Psi(config)
     
     stats_mean = stats_obj.get_mean()

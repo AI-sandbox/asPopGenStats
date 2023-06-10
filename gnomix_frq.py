@@ -35,7 +35,7 @@ def read_skip_comment(filename, start_pattern, **kwargs):
 def get_famid_col_idx(col_names):
     col_idx = 0
     while (col_idx < len(col_names)) and \
-          (not match("(\d|_)", col_names[col_idx])):
+          (match("^#?[A-Za-z]+( [A-Za-z]+)?$", col_names[col_idx])):
         col_idx += 1
     if col_idx == len(col_names):
         raise ValueError("Cannot find starting column index of samples!")
@@ -139,21 +139,21 @@ def get_msp_data(chr_idx, famid_id2pop_):
     return [data_mask, sample_cols], msp_df["spos"].to_numpy()
 
 
-def calculate_gnomix_row_repeat(pos_col, spos_col_gnx):
-    spos2count = np.zeros_like(spos_col_gnx)
-    spos_col_gnx = np.append(spos_col_gnx, len(pos_col))
+def calculate_gnomix_row_repeat(pos_col, spos_col_msk):
+    spos2count = np.zeros_like(spos_col_msk)
+    spos_col_msk = np.append(spos_col_msk, len(pos_col))
     prev_idx = 0
     curr_idx = 0
-    curr_idx_gnx = 1
-    gnx_value = spos_col_gnx[curr_idx_gnx]
-    while (curr_idx < len(pos_col) and curr_idx_gnx < len(spos_col_gnx) - 1):
-        if (curr_idx != 0 and pos_col[curr_idx] == gnx_value):
-            spos2count[curr_idx_gnx - 1] = curr_idx - prev_idx
+    curr_idx_msk = 1
+    msk_value = spos_col_msk[curr_idx_msk]
+    while (curr_idx < len(pos_col) and curr_idx_msk < len(spos_col_msk) - 1):
+        if (curr_idx != 0 and pos_col[curr_idx] == msk_value):
+            spos2count[curr_idx_msk - 1] = curr_idx - prev_idx
             prev_idx = curr_idx
-            curr_idx_gnx += 1
-            gnx_value = spos_col_gnx[curr_idx_gnx]
+            curr_idx_msk += 1
+            msk_value = spos_col_msk[curr_idx_msk]
         curr_idx += 1
-    spos2count[curr_idx_gnx - 1] = len(pos_col) - prev_idx
+    spos2count[curr_idx_msk - 1] = len(pos_col) - prev_idx
     assert np.sum(spos2count) == len(pos_col)
     return spos2count
 

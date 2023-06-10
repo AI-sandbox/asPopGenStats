@@ -21,14 +21,14 @@ def construct_aggr_file(data_dir, stats_name, files, aggr_file_abspath,
         DA_file_abspath     Absolute path to derived allele SNP position file
         DAF                 Derived allele frequency with range [0.0, 0.5]
     '''
-    # ["CHR", "SNP", "A1", "A2", "MAF", "NCHROBS", "MAF_GNX", "NCHROBS_GNX"]
-    colname = ["MAF", "NCHROBS", "MAF_GNX", "NCHROBS_GNX"]
+    # ["CHR", "SNP", "A1", "A2", "MAF", "NCHROBS", "MAF_MSK", "NCHROBS_MSK"]
+    colname = ["MAF", "NCHROBS", "MAF_MSK", "NCHROBS_MSK"]
     colname_chrom = ["CHR", "SNP", "A1", "A2"]
     # Load and stack the population files.
     curr_pop = pd.read_csv(os.path.join(data_dir, files[0]),
                            header=0, sep='\t')
     chrom_idx = curr_pop[colname_chrom]
-    # data frame with column name ["MAF", "NCHROBS", "MAF_GNX", "NCHROBS_GNX"]
+    # data frame with column name ["MAF", "NCHROBS", "MAF_MSK", "NCHROBS_MSK"]
     curr_pop_stat = curr_pop[colname].to_numpy()
     res = np.stack((curr_pop_stat[:, 0] * curr_pop_stat[:, 1], curr_pop_stat[:, 1],
                     curr_pop_stat[:, 2] * curr_pop_stat[:, 3], curr_pop_stat[:, 3]),
@@ -48,12 +48,12 @@ def construct_aggr_file(data_dir, stats_name, files, aggr_file_abspath,
         res[:, 0] = np.divide(res[:, 0], res[:, 1], out=np.zeros(res.shape[0]),
                               where=(res[:, 1] != 0))  # ["MAF", "NCHROBS"]
         res[:, 2] = np.divide(res[:, 2], res[:, 3], out=np.zeros(res.shape[0]),
-                              where=(res[:, 3] != 0))  # ["MAF_GNX", "NCHROBS_GNX"]
+                              where=(res[:, 3] != 0))  # ["MAF_MSK", "NCHROBS_MSK"]
         res = res.astype('float32')
 
         df_final = pd.DataFrame(np.hstack((chrom_idx, res)),
                                 columns=["CHR", "SNP", "A1", "A2", "MAF",
-                                         "NCHROBS", "MAF_GNX", "NCHROBS_GNX"])
+                                         "NCHROBS", "MAF_MSK", "NCHROBS_MSK"])
         df_final.to_csv(f"{aggr_file_abspath:s}", index=False)
 
     if stats_name == 'psi':
