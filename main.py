@@ -356,7 +356,7 @@ class UnaryComputation(object):
         out_mtx = np.zeros(num_pop1, )
         out_mtx_se = np.zeros(num_pop1, )
         for i in trange(num_pop1):
-            pop1 = populus_list1[0][i]
+            pop1 = populus_list1[i]
             stats_mean, stats_std_error = stats_input([pop1], params)
             out_mtx[i], out_mtx_se[i] = stats_mean, stats_std_error
             print(f"{pop1:s}: {stats_mean:f}, {stats_std_error:f}")
