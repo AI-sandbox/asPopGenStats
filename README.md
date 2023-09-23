@@ -57,7 +57,7 @@ optional arguments:
   -m MASK, --mask MASK  Use masked data for genetic statistics computation  
   --rm_DA_files RM_DA_FILES  
                         (Boolean) whether to will remove the intermediary files that indicate SNP positions  
-                        for derived alleles at the end of each run, default=True
+                        for derived alleles at the end of each run, default=False
 </font></td></tr></table>
 
 [^1]: All pair example (complete graph):

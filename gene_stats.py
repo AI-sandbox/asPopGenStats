@@ -67,7 +67,7 @@ def heterozygosity(df):
     '''
     # df.colname = ['populus1_frq', 'populus1_ct']
     temp = 2 * df[:, 0] * (1 - df[:, 0]) 
-    heterozyg = np.mean( temp * (df[:, 1] / (df[:, 1] - 1)) )
+    heterozyg = np.mean(temp * (df[:, 1] / (df[:, 1] - 1)))
     return heterozyg
 
 
@@ -141,7 +141,7 @@ def f3(df):
     '''
     # df.colname = ['populus1_frq', 'populus2_frq', 'outgroup_frq', 'outgroup_ct']
     f3_biased = np.mean((df[:, 2] - df[:, 0]) * (df[:, 2] - df[:, 1]))
-    adjusted = np.mean(df[:, 2] * (1 - df[:, 2]) / (df[:, 3] - 1))
+    adjusted = np.mean(2 * df[:, 2] * (1 - df[:, 2]) / (df[:, 3] - 1))
     return f3_biased - adjusted
 
 
