@@ -377,10 +377,32 @@ class GeneralComputation(object):
             print("The input genetic statistics requires 1 or 2 population "
                   "list files.")
             sys.exit(0)
+        self.validate_inputs(params)
+
         if num_pop_files == 1:
             self.self_match_computation(params)
         else:
             self.cross_match_computation(params)
+
+    def validate_inputs(self, params):
+        """
+        Confirm that all .freq files contain the exact same SNPs and alternate alleles (A1).
+        """
+        pop_dir = params.data_dir
+        freq_files = set()
+        # Get all population frequency files
+        for pop_file in params.populi_list:
+            for pop in pop_file:
+                freq_files.add(os.path.join(pop_dir, pop + ".freq"))
+        freq_files = list(freq_files)
+
+        ref = pd.read_csv(freq_files[0], usecols=["CHR", "SNP", "A1"], sep='\t', header=0)
+        for i in range(1, len(freq_files)):
+            curr_pop = pd.read_csv(freq_files[i], usecols=["CHR", "SNP", "A1"], sep='\t', header=0)
+            if not ref.equals(curr_pop):
+                print("All population frequency files must contain the exact same SNPs and minor alleles. "
+                      f"Differing row(s) found in {freq_files[i].split('/')[-1]}.")
+                sys.exit(0)
 
     def self_match_computation(self, params):
         # self join: Group A - Group A
@@ -444,7 +466,28 @@ class F4Computation(object):
             print("The genetic statistics F4 requires 3 population "
                   "list files representing A, B, and D in F4(A, B; C, D).")
             sys.exit(0)
+        self.validate_inputs(params)
         self.cross_match_computation(params)
+
+    def validate_inputs(self, params):
+        """
+        Confirm that all .freq files contain the exact same SNPs and alternate alleles (A1).
+        """
+        pop_dir = params.data_dir
+        freq_files = set()
+        # Get all population frequency files
+        for pop_file in params.populi_list:
+            for pop in pop_file:
+                freq_files.add(os.path.join(pop_dir, pop + ".freq"))
+        freq_files = list(freq_files)
+
+        ref = pd.read_csv(freq_files[0], usecols=["CHR", "SNP", "A1"], sep='\t', header=0)
+        for i in range(1, len(freq_files)):
+            curr_pop = pd.read_csv(freq_files[i], usecols=["CHR", "SNP", "A1"], sep='\t', header=0)
+            if not ref.equals(curr_pop):
+                print("All population frequency files must contain the exact same SNPs and minor alleles. "
+                      f"Differing row(s) found in {freq_files[i].split('/')[-1]}.")
+                sys.exit(0)
 
     def cross_match_computation(self, params):
         # inner join: Group A - Group B - Group D
