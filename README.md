@@ -3,7 +3,7 @@
 
 ## First Stage
 `gnomix_frq.py`: a conversion that aggregates information from Gnomix output files (`.msp`) and vcf files (`.vcf`) and creates frequency files (`.freq`) for population groups masked by specific ancestry (mask_group). 
-<mark>Beware to modify variable "**data_dir**" to your own data directory, which includes a set of chromosome data directories, each with vcf and msp files, in `gnomix_frq.py`.
+<mark>Be careful to modify variable "**data_dir**" to your own data directory, which includes a set of chromosome data directories, each with vcf and msp files, in `gnomix_frq.py`.
 Please also provide a sample information file, e.g.,`hawaiiPopInfo.csv`, that gives sample's unique identifier created by the family ID and sample ID, "**famid_id**", and the sample's population group, "**population**", at the same path of `gnomix_frq.py`.</mark>
 
 <table frame=void><tr><td bgcolor=F2F2F2><font face="monospace" size=4>
